@@ -1,0 +1,122 @@
+# Translation of Plugins - Dynamic Visibility for Elementor - Stable (latest release) in Portuguese (Brazil)
+# This file is distributed under the same license as the Plugins - Dynamic Visibility for Elementor - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2018-09-04 21:51:49+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: GlotPress/4.0.0-alpha.11\n"
+"Language: pt_BR\n"
+"Project-Id-Version: Plugins - Dynamic Visibility for Elementor - Stable (latest release)\n"
+
+#. Author URI of the plugin
+msgid "https://www.dynamic.ooo/"
+msgstr "https://www.dynamic.ooo/"
+
+#. Author of the plugin
+msgid "Dynamic.ooo"
+msgstr "Dynamic.ooo"
+
+#. Plugin Name of the plugin
+msgid "Dynamic Visibility for Elementor"
+msgstr "Dynamic Visibility for Elementor"
+
+#: includes/extensions/dynamic-visibility.php:2093
+msgid "Text Fallback"
+msgstr "Recuo de texto"
+
+#: class/trait/options.php:83 includes/extensions/dynamic-visibility.php:175
+#: includes/extensions/dynamic-visibility.php:2339
+#: includes/extensions/dynamic-visibility.php:2348
+#: modules/query-control/module.php:527
+msgid "Date"
+msgstr "Data"
+
+#: includes/extensions/dynamic-visibility.php:775
+msgid "Selected Users"
+msgstr "Usuários selecionados"
+
+#: class/trait/options.php:149
+msgid "easeOutExpo"
+msgstr "easeOutExpo"
+
+#: class/trait/options.php:148
+msgid "easeInExpo"
+msgstr "easeInExpo"
+
+#: class/trait/options.php:147
+msgid "easeInOutCirc"
+msgstr "easeInOutCirc"
+
+#: class/trait/options.php:146
+msgid "easeOutCirc"
+msgstr "easeOutCirc"
+
+#: class/trait/options.php:145
+msgid "easeInCirc"
+msgstr "easeInCirc"
+
+#: class/trait/options.php:144
+msgid "easeInOutQuint"
+msgstr "easeInOutQuint"
+
+#: class/trait/options.php:143
+msgid "easeOutQuint"
+msgstr "easeOutQuint"
+
+#: class/trait/options.php:142
+msgid "easeInQuint"
+msgstr "easeInQuint"
+
+#: class/trait/options.php:141
+msgid "Ease In Out"
+msgstr "Ease In Out"
+
+#: class/trait/options.php:140
+msgid "Ease Out"
+msgstr "Ease Out"
+
+#: class/trait/options.php:139
+msgid "Ease In"
+msgstr "Ease In"
+
+#: class/trait/options.php:138
+msgid "Ease"
+msgstr "Ease"
+
+#: class/trait/options.php:137 class/trait/options.php:283
+msgid "Linear"
+msgstr "Linear"
+
+#: class/trait/elementor.php:68 class/trait/elementor.php:70
+#: class/trait/options.php:92 class/trait/options.php:273
+#: class/trait/options.php:582 class/trait/options.php:627
+msgid "None"
+msgstr "Nenhum"
+
+#: includes/extensions/dynamic-visibility.php:37
+#: includes/extensions/dynamic-visibility.php:581
+msgid "Visibility"
+msgstr "Visibilidade"
+
+#: includes/extensions/dynamic-visibility.php:629
+msgid "Show"
+msgstr "Mostrar"
+
+#: class/trait/options.php:153
+msgid "easeInOutBack"
+msgstr "easeInOutBack"
+
+#: class/trait/options.php:152
+msgid "easeOutBack"
+msgstr "easeOutBack"
+
+#: class/trait/options.php:151
+msgid "easeInBack"
+msgstr "easeInBack"
+
+#: class/trait/options.php:150
+msgid "easeInOutExpo"
+msgstr "easeInOutExpo"

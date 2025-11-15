@@ -1,0 +1,67 @@
+# WordPress
+wp-config.php
+wp-config-sample.php
+.htaccess
+
+# Debug
+wp-content/debug.log
+*.log
+
+# Uploads
+wp-content/uploads/*
+!wp-content/uploads/.gitkeep
+
+# Cache
+wp-content/cache/*
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# Plugins e temas instalados (descomente se não quiser versionar)
+# wp-content/plugins/*
+# wp-content/themes/*
+
+# Mantém apenas plugins e temas customizados
+!wp-content/plugins/.gitkeep
+!wp-content/themes/.gitkeep
+
+# Arquivos do sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node modules (se houver)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.*.local
+
+# Arquivos SQL (descomente se não quiser versionar)
+# *.sql
+
+# Arquivos PHP suspeitos
+rptegmfmcq.php
+mailteste.php
+loggertrait.php
+
