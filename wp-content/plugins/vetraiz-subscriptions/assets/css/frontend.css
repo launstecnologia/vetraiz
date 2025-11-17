@@ -112,6 +112,10 @@
 
 .form-group {
 	margin-bottom: 20px;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
 }
 
 .form-group label {
@@ -120,10 +124,12 @@
 	font-weight: 600;
 	color: #333;
 	font-size: 14px;
+	width: 100%;
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
 	width: 100%;
 	padding: 12px 15px;
 	border: 2px solid #e0e0e0;
@@ -131,10 +137,12 @@
 	font-size: 14px;
 	transition: all 0.3s ease;
 	box-sizing: border-box;
+	display: block;
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
 	outline: none;
 	border-color: #667eea;
 	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
