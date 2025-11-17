@@ -99,8 +99,12 @@ class Vetraiz_Subscriptions_Frontend {
 	 * @return string
 	 */
 	public function subscribe_form_shortcode() {
+		// Check if there's a redirect parameter
+		$redirect_to = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
+		
 		if ( ! is_user_logged_in() ) {
-			return '<p>Você precisa estar logado para assinar. <a href="' . wp_login_url() . '">Fazer login</a></p>';
+			$login_url = $redirect_to ? add_query_arg( 'redirect_to', urlencode( $redirect_to ), wp_login_url() ) : wp_login_url();
+			return '<p>Você precisa estar logado para assinar. <a href="' . esc_url( $login_url ) . '">Fazer login</a></p>';
 		}
 		
 		$user_id = get_current_user_id();
@@ -108,7 +112,14 @@ class Vetraiz_Subscriptions_Frontend {
 		// Check if user already has subscription
 		$subscription = Vetraiz_Subscriptions_Subscription::get_user_subscription( $user_id );
 		if ( $subscription && in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
-			return '<div class="vetraiz-alert vetraiz-alert-info">Você já possui uma assinatura ativa. <a href="' . home_url( '/minha-assinatura' ) . '">Ver minha assinatura</a></div>';
+			$message = '<div class="vetraiz-alert vetraiz-alert-info">Você já possui uma assinatura ativa. <a href="' . home_url( '/minha-assinatura' ) . '">Ver minha assinatura</a></div>';
+			
+			// If there's a redirect, redirect after showing message
+			if ( $redirect_to ) {
+				$message .= '<script>setTimeout(function(){ window.location.href = "' . esc_js( $redirect_to ) . '"; }, 2000);</script>';
+			}
+			
+			return $message;
 		}
 		
 		ob_start();

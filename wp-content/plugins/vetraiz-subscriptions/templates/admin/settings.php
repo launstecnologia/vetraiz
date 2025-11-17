@@ -76,6 +76,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</tr>
 		</table>
 		
+		<h2>Proteção de Vídeos</h2>
+		<table class="form-table">
+			<tr>
+				<th scope="row">
+					<label for="vetraiz_video_post_type">Post Type dos Vídeos</label>
+				</th>
+				<td>
+					<input type="text" id="vetraiz_video_post_type" name="vetraiz_video_post_type" value="<?php echo esc_attr( get_option( 'vetraiz_video_post_type', 'video' ) ); ?>" class="regular-text" />
+					<p class="description">Post type usado para vídeos (ex: video, jet-engine-video, etc.)</p>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="vetraiz_video_category">Categoria/Taxonomia dos Vídeos</label>
+				</th>
+				<td>
+					<input type="text" id="vetraiz_video_category" name="vetraiz_video_category" value="<?php echo esc_attr( get_option( 'vetraiz_video_category', '' ) ); ?>" class="regular-text" />
+					<p class="description">Slug da categoria ou taxonomia que identifica vídeos (opcional)</p>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="vetraiz_video_url_patterns">Padrões de URL (um por linha)</label>
+				</th>
+				<td>
+					<textarea id="vetraiz_video_url_patterns" name="vetraiz_video_url_patterns" rows="5" class="large-text"><?php echo esc_textarea( implode( "\n", get_option( 'vetraiz_video_url_patterns', array() ) ) ); ?></textarea>
+					<p class="description">URLs que contêm estes padrões serão protegidas (ex: /video/, /conteudo-restrito/)</p>
+				</td>
+			</tr>
+		</table>
+		
 		<?php submit_button(); ?>
 	</form>
 </div>

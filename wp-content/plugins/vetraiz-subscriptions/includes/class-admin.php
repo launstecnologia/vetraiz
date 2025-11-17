@@ -81,6 +81,30 @@ class Vetraiz_Subscriptions_Admin {
 		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_subscribe_page_id' );
 		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_plan_name' );
 		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_plan_value' );
+		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_video_post_type' );
+		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_video_category' );
+		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_video_url_patterns' );
+		
+		// Sanitize URL patterns
+		add_filter( 'sanitize_option_vetraiz_video_url_patterns', array( $this, 'sanitize_url_patterns' ) );
+	}
+	
+	/**
+	 * Sanitize URL patterns
+	 *
+	 * @param string $value URL patterns.
+	 * @return array
+	 */
+	public function sanitize_url_patterns( $value ) {
+		if ( is_array( $value ) ) {
+			return $value;
+		}
+		
+		$patterns = explode( "\n", $value );
+		$patterns = array_map( 'trim', $patterns );
+		$patterns = array_filter( $patterns );
+		
+		return $patterns;
 	}
 	
 	/**

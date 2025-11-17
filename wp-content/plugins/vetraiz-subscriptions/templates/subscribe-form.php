@@ -14,11 +14,24 @@ $plan_value = get_option( 'vetraiz_plan_value', '14.99' );
 $user = wp_get_current_user();
 ?>
 
+<?php
+$redirect_to = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
+?>
+
 <div class="vetraiz-subscribe-form">
 	<h2>Assinar <?php echo esc_html( $plan_name ); ?></h2>
 	
+	<?php if ( $redirect_to ) : ?>
+		<div class="vetraiz-alert vetraiz-alert-info">
+			<p>Você precisa de uma assinatura ativa para acessar este conteúdo.</p>
+		</div>
+	<?php endif; ?>
+	
 	<form id="vetraiz-subscribe-form" method="post" action="">
 		<?php wp_nonce_field( 'vetraiz_subscribe', 'vetraiz_subscribe_nonce' ); ?>
+		<?php if ( $redirect_to ) : ?>
+			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>">
+		<?php endif; ?>
 		
 		<div class="form-group">
 			<label for="user_name">Nome Completo *</label>
@@ -106,7 +119,8 @@ jQuery(document).ready(function($) {
 			data: {
 				action: 'vetraiz_create_subscription',
 				nonce: '<?php echo wp_create_nonce( 'vetraiz_subscribe' ); ?>',
-				form_data: form.serialize()
+				form_data: form.serialize(),
+				redirect_to: '<?php echo esc_js( $redirect_to ); ?>'
 			},
 			success: function(response) {
 				if (response.success) {

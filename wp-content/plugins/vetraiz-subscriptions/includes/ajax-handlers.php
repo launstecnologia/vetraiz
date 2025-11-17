@@ -70,15 +70,20 @@ function vetraiz_handle_create_subscription() {
 	$payments = Vetraiz_Subscriptions_Payment::get_user_payments( $user_id );
 	$first_payment = ! empty( $payments ) ? $payments[0] : null;
 	
+	// Check if there's a redirect parameter
+	$redirect_to = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : '';
+	
 	if ( $first_payment ) {
+		$redirect_url = $redirect_to ? $redirect_to : home_url( '/fatura/' . $first_payment->id );
 		wp_send_json_success( array(
-			'message'  => 'Assinatura criada com sucesso! Redirecionando para a fatura...',
-			'redirect' => home_url( '/fatura/' . $first_payment->id ),
+			'message'  => 'Assinatura criada com sucesso! Redirecionando...',
+			'redirect' => $redirect_url,
 		) );
 	} else {
+		$redirect_url = $redirect_to ? $redirect_to : home_url( '/minha-assinatura' );
 		wp_send_json_success( array(
 			'message'  => 'Assinatura criada com sucesso!',
-			'redirect' => home_url( '/minha-assinatura' ),
+			'redirect' => $redirect_url,
 		) );
 	}
 }

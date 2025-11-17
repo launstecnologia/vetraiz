@@ -39,6 +39,12 @@ class Vetraiz_Subscriptions_Access_Control {
 		
 		// Filter to check access
 		add_filter( 'vetraiz_user_has_access', array( $this, 'check_user_access' ), 10, 1 );
+		
+		// Protect video pages
+		add_action( 'template_redirect', array( $this, 'protect_video_pages' ) );
+		
+		// Protect JetEngine custom post types (if video post type exists)
+		add_action( 'template_redirect', array( $this, 'protect_jetengine_videos' ) );
 	}
 	
 	/**
@@ -99,6 +105,111 @@ class Vetraiz_Subscriptions_Access_Control {
 		}
 		
 		return $video_html;
+	}
+	
+	/**
+	 * Protect video pages
+	 */
+	public function protect_video_pages() {
+		// Check if this is a video page (you can customize this logic)
+		$is_video_page = $this->is_video_page();
+		
+		if ( ! $is_video_page ) {
+			return;
+		}
+		
+		// Check if user has access
+		if ( ! $this->check_user_access() ) {
+			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
+			
+			// Store redirect URL for after login/subscription
+			if ( ! is_user_logged_in() ) {
+				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), wp_login_url() );
+			} else {
+				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
+			}
+			
+			wp_redirect( $redirect_url );
+			exit;
+		}
+	}
+	
+	/**
+	 * Protect JetEngine video posts
+	 */
+	public function protect_jetengine_videos() {
+		// Check if JetEngine is active
+		if ( ! class_exists( 'Jet_Engine' ) ) {
+			return;
+		}
+		
+		// Get video post type (you can configure this in settings)
+		$video_post_type = get_option( 'vetraiz_video_post_type', 'video' );
+		
+		if ( ! is_singular( $video_post_type ) ) {
+			return;
+		}
+		
+		// Check if user has access
+		if ( ! $this->check_user_access() ) {
+			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
+			
+			// Store redirect URL
+			if ( ! is_user_logged_in() ) {
+				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), wp_login_url() );
+			} else {
+				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
+			}
+			
+			wp_redirect( $redirect_url );
+			exit;
+		}
+	}
+	
+	/**
+	 * Check if current page is a video page
+	 *
+	 * @return bool
+	 */
+	private function is_video_page() {
+		// Check by post type
+		$video_post_type = get_option( 'vetraiz_video_post_type', 'video' );
+		if ( $video_post_type && is_singular( $video_post_type ) ) {
+			return true;
+		}
+		
+		// Check by category/taxonomy
+		$video_category = get_option( 'vetraiz_video_category', '' );
+		if ( $video_category && has_term( $video_category, 'category' ) ) {
+			return true;
+		}
+		
+		// Check by meta field (JetEngine)
+		if ( function_exists( 'jet_engine' ) && is_singular() ) {
+			$is_video = get_post_meta( get_the_ID(), '_vetraiz_is_video', true );
+			if ( $is_video ) {
+				return true;
+			}
+		}
+		
+		// Check by URL pattern
+		$url_patterns = get_option( 'vetraiz_video_url_patterns', array() );
+		if ( ! is_array( $url_patterns ) && ! empty( $url_patterns ) ) {
+			$url_patterns = explode( "\n", $url_patterns );
+			$url_patterns = array_map( 'trim', $url_patterns );
+			$url_patterns = array_filter( $url_patterns );
+		}
+		
+		if ( ! empty( $url_patterns ) ) {
+			$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+			foreach ( $url_patterns as $pattern ) {
+				if ( ! empty( $pattern ) && false !== strpos( $current_url, $pattern ) ) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 	/**
