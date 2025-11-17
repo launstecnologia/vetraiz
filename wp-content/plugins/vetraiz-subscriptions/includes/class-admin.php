@@ -44,6 +44,9 @@ class Vetraiz_Subscriptions_Admin {
 		
 		// Remove update notices
 		add_action( 'admin_init', array( $this, 'remove_update_notices' ) );
+		
+		// Reorganize admin menu
+		add_action( 'admin_menu', array( $this, 'reorganize_admin_menu' ), 999 );
 	}
 	
 	/**
