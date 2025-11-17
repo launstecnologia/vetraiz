@@ -20,7 +20,7 @@ $expired = isset( $_GET['expired'] ) && '1' === $_GET['expired'];
 <div class="vetraiz-subscribe-form-wrapper">
 	<div class="vetraiz-subscribe-form">
 		<div class="vetraiz-form-header">
-			<h2>Assinar <?php echo esc_html( $plan_name ); ?></h2>
+			<h2><?php echo esc_html( $plan_name ); ?></h2>
 			<?php if ( $expired ) : ?>
 				<div class="vetraiz-alert vetraiz-alert-warning">
 					<p><strong>Sua assinatura anterior expirou.</strong> Para continuar acessando o conteúdo, assine novamente.</p>
