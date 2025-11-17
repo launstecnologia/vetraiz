@@ -520,7 +520,10 @@ class Vetraiz_Subscriptions_Admin {
 	 * Reorganize admin menu
 	 */
 	public function reorganize_admin_menu() {
-		global $menu, $submenu;
+		// Only run for administrators
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
 		
 		// Remove menus that should be under "Desenvolvedor"
 		$menus_to_hide = array(
@@ -533,8 +536,12 @@ class Vetraiz_Subscriptions_Admin {
 			'users.php', // Users
 			'tools.php', // Tools
 			'options-general.php', // Settings
-			'edit.php?post_type=elementor_library', // Elementor Templates
 		);
+		
+		// Hide original menus from main sidebar first
+		foreach ( $menus_to_hide as $menu_slug ) {
+			remove_menu_page( $menu_slug );
+		}
 		
 		// Create "Desenvolvedor" menu
 		add_menu_page(
@@ -542,7 +549,7 @@ class Vetraiz_Subscriptions_Admin {
 			'Desenvolvedor',
 			'manage_options',
 			'vetraiz-developer',
-			'',
+			array( $this, 'render_developer_page' ),
 			'dashicons-admin-tools',
 			100
 		);
@@ -631,6 +638,7 @@ class Vetraiz_Subscriptions_Admin {
 		
 		// Add Elementor Templates if Elementor exists
 		if ( class_exists( '\Elementor\Plugin' ) ) {
+			remove_menu_page( 'edit.php?post_type=elementor_library' );
 			add_submenu_page(
 				'vetraiz-developer',
 				'Modelos Elementor',
@@ -639,11 +647,6 @@ class Vetraiz_Subscriptions_Admin {
 				'edit.php?post_type=elementor_library',
 				''
 			);
-		}
-		
-		// Hide original menus from main sidebar
-		foreach ( $menus_to_hide as $menu_slug ) {
-			remove_menu_page( $menu_slug );
 		}
 		
 		// Add "Vídeos" menu if post type exists
@@ -658,9 +661,27 @@ class Vetraiz_Subscriptions_Admin {
 				5
 			);
 		}
+	}
+	
+	/**
+	 * Render developer page (empty, just redirects to first submenu)
+	 */
+	public function render_developer_page() {
+		// Redirect to first available submenu or show message
+		$submenus = array(
+			'edit.php' => 'Posts',
+			'upload.php' => 'Mídia',
+			'edit.php?post_type=page' => 'Páginas',
+		);
 		
-		// Ensure Assinaturas menu is in correct position
-		// Already handled in add_admin_menu()
+		foreach ( $submenus as $url => $name ) {
+			if ( current_user_can( 'edit_posts' ) ) {
+				wp_safe_redirect( admin_url( $url ) );
+				exit;
+			}
+		}
+		
+		echo '<div class="wrap"><h1>Desenvolvedor</h1><p>Selecione uma opção no menu lateral.</p></div>';
 	}
 }
 
