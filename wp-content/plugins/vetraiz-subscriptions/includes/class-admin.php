@@ -56,6 +56,15 @@ class Vetraiz_Subscriptions_Admin {
 		
 		add_submenu_page(
 			'vetraiz-subscriptions',
+			'Dashboard',
+			'Dashboard',
+			'manage_options',
+			'vetraiz-subscriptions-dashboard',
+			array( $this, 'render_dashboard' )
+		);
+		
+		add_submenu_page(
+			'vetraiz-subscriptions',
 			'Configurações',
 			'Configurações',
 			'manage_options',
@@ -117,6 +126,91 @@ class Vetraiz_Subscriptions_Admin {
 		$patterns = array_filter( $patterns );
 		
 		return $patterns;
+	}
+	
+	/**
+	 * Render dashboard
+	 */
+	public function render_dashboard() {
+		global $wpdb;
+		$table_subscriptions = $wpdb->prefix . 'vetraiz_subscriptions';
+		$table_payments = $wpdb->prefix . 'vetraiz_subscription_payments';
+		
+		// Total de usuários com assinatura
+		$total_users = $wpdb->get_var( 
+			"SELECT COUNT(DISTINCT user_id) FROM $table_subscriptions"
+		);
+		
+		// Total de assinaturas criadas no mês atual
+		$current_month_start = date( 'Y-m-01 00:00:00' );
+		$current_month_end = date( 'Y-m-t 23:59:59' );
+		$subscriptions_this_month = $wpdb->get_var( 
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM $table_subscriptions 
+				WHERE created_at BETWEEN %s AND %s",
+				$current_month_start,
+				$current_month_end
+			)
+		);
+		
+		// Total que não renovou (assinaturas que expiraram - status diferente de active e sem pagamento recente)
+		$expired_subscriptions = $wpdb->get_var(
+			"SELECT COUNT(DISTINCT s.id) 
+			FROM $table_subscriptions s
+			LEFT JOIN $table_payments p ON s.id = p.subscription_id AND p.status = 'received'
+			WHERE s.status != 'active' 
+			OR (s.status = 'active' AND s.end_date IS NOT NULL AND s.end_date < NOW())
+			OR (s.status = 'active' AND p.id IS NULL)"
+		);
+		
+		// Total pago com cartão (soma dos valores recebidos)
+		$total_card = $wpdb->get_var(
+			"SELECT COALESCE(SUM(p.value), 0) 
+			FROM $table_payments p
+			INNER JOIN $table_subscriptions s ON p.subscription_id = s.id
+			WHERE p.status = 'received' 
+			AND s.payment_method = 'CREDIT_CARD'"
+		);
+		
+		// Total pago com PIX (soma dos valores recebidos)
+		$total_pix = $wpdb->get_var(
+			"SELECT COALESCE(SUM(p.value), 0) 
+			FROM $table_payments p
+			INNER JOIN $table_subscriptions s ON p.subscription_id = s.id
+			WHERE p.status = 'received' 
+			AND s.payment_method = 'PIX'"
+		);
+		
+		// Assinaturas ativas
+		$active_subscriptions = $wpdb->get_var(
+			"SELECT COUNT(*) FROM $table_subscriptions WHERE status = 'active'"
+		);
+		
+		// Assinaturas pendentes
+		$pending_subscriptions = $wpdb->get_var(
+			"SELECT COUNT(*) FROM $table_subscriptions WHERE status = 'pending'"
+		);
+		
+		// Total geral recebido
+		$total_received = $wpdb->get_var(
+			"SELECT COALESCE(SUM(value), 0) 
+			FROM $table_payments 
+			WHERE status = 'received'"
+		);
+		
+		// Pagamentos do mês atual
+		$payments_this_month = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COALESCE(SUM(value), 0) 
+				FROM $table_payments 
+				WHERE status = 'received' 
+				AND payment_date BETWEEN %s AND %s",
+				$current_month_start,
+				$current_month_end
+			)
+		);
+		
+		include VETRAIZ_SUBSCRIPTIONS_PLUGIN_DIR . 'templates/admin/dashboard.php';
 	}
 	
 	/**
