@@ -11,6 +11,8 @@
 	border-radius: 12px;
 	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .vetraiz-form-header {
@@ -47,10 +49,14 @@
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 0;
+	min-height: 100%;
+	width: 100%;
 }
 
 .vetraiz-form-column {
 	padding: 30px;
+	min-height: 100%;
+	box-sizing: border-box;
 }
 
 .vetraiz-form-left {
@@ -393,7 +399,7 @@
 }
 
 /* Responsive */
-@media (max-width: 968px) {
+@media (max-width: 768px) {
 	.vetraiz-form-grid {
 		grid-template-columns: 1fr;
 	}
@@ -403,7 +409,19 @@
 		border-bottom: 1px solid #e9ecef;
 	}
 	
+	.vetraiz-form-column {
+		padding: 20px;
+	}
+	
 	.form-row {
 		grid-template-columns: 1fr;
+	}
+	
+	.vetraiz-form-header {
+		padding: 20px;
+	}
+	
+	.vetraiz-form-header h2 {
+		font-size: 24px;
 	}
 }
