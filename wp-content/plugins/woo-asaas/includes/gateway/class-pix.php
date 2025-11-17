@@ -316,22 +316,34 @@ class Pix extends Gateway {
 			}
 		}
 
-		$payment_created = $response->get_json();
-
-		$pix_info_response = $this->api->payments()->pix_info( $payment_created->id );
-		if ( is_a( $pix_info_response, Error_Response::class ) ) {
-			$this->send_checkout_failure_response( $pix_info_response );
-			return;
+		// Verify if order meta data was saved (PIX info should be available)
+		$order_meta = $order->get_meta_data();
+		if ( false === $order_meta ) {
+			// Check if this is a subscription where first payment is not processed immediately
+			$has_subscription_without_immediate_payment = false;
+			foreach ( $transactions_queue as $transaction ) {
+				if ( 'subscription' === $transaction['type'] ) {
+					$first_payment_strategy = $transaction['first_payment_strategy'];
+					// If processed_by_parent_order is 0, first payment is not processed immediately
+					if ( 0 === $first_payment_strategy['processed_by_parent_order'] ) {
+						$has_subscription_without_immediate_payment = true;
+						break;
+					}
+				}
+			}
+			
+			// If meta data is not saved and it's not a subscription without immediate payment, it's an error
+			if ( ! $has_subscription_without_immediate_payment ) {
+				$this->send_checkout_failure(
+					array(
+						__( 'Ocorreu um erro ao processar seu pedido. Entre em contato conosco.', 'woo-asaas' ),
+					)
+				);
+				return;
+			}
 		}
 
-		$pix_info = $pix_info_response->get_json();
-
-		$json = $this->join_responses( $payment_created, $pix_info );
-
-		$order->set_meta_data( $json );
-
-		$this->add_payment_id_to_order( $payment_created->id, $wc_order );
-
+		// Schedule expired PIX removal
 		Expired_Pix_Cron::get_instance()->schedule_remove_expired_pix( $wc_order->get_id() );
 
 		// Mark order as completed if it doesn't needs payment.
