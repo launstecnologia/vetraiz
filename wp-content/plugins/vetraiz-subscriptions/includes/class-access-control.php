@@ -232,7 +232,7 @@ class Vetraiz_Subscriptions_Access_Control {
 			
 			// Check by taxonomy "tipos-de-videos" for term "assinantes" (most common case)
 			$taxonomies_to_check = array(
-				'tipos-de-videos', // JetEngine taxonomy
+				'tipos-de-videos', // JetEngine taxonomy (most common)
 				'tipos_de_videos',
 				'tipo-de-video',
 				'video-type',
@@ -240,14 +240,34 @@ class Vetraiz_Subscriptions_Access_Control {
 			
 			foreach ( $taxonomies_to_check as $taxonomy ) {
 				if ( taxonomy_exists( $taxonomy ) ) {
+					// Get terms by slug first (more reliable)
 					$terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'slugs' ) );
 					if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
 						foreach ( $terms as $term ) {
-							if ( in_array( strtolower( $term ), array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+							$term_lower = strtolower( $term );
+							if ( in_array( $term_lower, array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
 								$requires_subscription = true;
 								break 2; // Break both loops
 							}
 						}
+					}
+					
+					// Also check by term name (in case slug is different)
+					$terms_by_name = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'names' ) );
+					if ( ! is_wp_error( $terms_by_name ) && ! empty( $terms_by_name ) ) {
+						foreach ( $terms_by_name as $term_name ) {
+							$term_name_lower = strtolower( $term_name );
+							if ( in_array( $term_name_lower, array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+								$requires_subscription = true;
+								break 2; // Break both loops
+							}
+						}
+					}
+					
+					// Also check by has_term for "assinantes"
+					if ( has_term( 'assinantes', $taxonomy, $post_id ) ) {
+						$requires_subscription = true;
+						break;
 					}
 				}
 			}
