@@ -321,22 +321,18 @@ class Vetraiz_Subscriptions_Access_Control {
 			
 			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/conteudo-restrito' );
 			
-			// Store redirect URL for after login/subscription
-			if ( ! is_user_logged_in() ) {
-				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), wp_login_url() );
+			// Always redirect to subscription page (where user can login/register and subscribe)
+			// If user had WooCommerce access that expired, show a message
+			if ( $had_woocommerce_access ) {
+				$redirect_url = add_query_arg( 
+					array(
+						'redirect_to' => urlencode( get_permalink() ),
+						'expired' => '1',
+					),
+					$subscribe_url 
+				);
 			} else {
-				// If user had WooCommerce access that expired, show a message
-				if ( $had_woocommerce_access ) {
-					$redirect_url = add_query_arg( 
-						array(
-							'redirect_to' => urlencode( get_permalink() ),
-							'expired' => '1',
-						),
-						$subscribe_url 
-					);
-				} else {
-					$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
-				}
+				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
 			}
 			
 			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
@@ -383,12 +379,8 @@ class Vetraiz_Subscriptions_Access_Control {
 		if ( ! $this->check_user_access() ) {
 			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/conteudo-restrito' );
 			
-			// Store redirect URL
-			if ( ! is_user_logged_in() ) {
-				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), wp_login_url() );
-			} else {
-				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
-			}
+			// Always redirect to subscription page (where user can login/register and subscribe)
+			$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
 			
 			wp_redirect( $redirect_url );
 			exit;
