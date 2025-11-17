@@ -83,6 +83,49 @@ jQuery(document).ready(function($) {
 			$('.copy-pix-code').text('Copiar Código');
 		}, 2000);
 	});
+	
+	// Auto-refresh payment status if pending
+	<?php if ( 'pending' === $payment->status ) : ?>
+	var paymentId = <?php echo esc_js( $payment->id ); ?>;
+	var checkInterval = null;
+	var checkCount = 0;
+	var maxChecks = 60; // Check for 5 minutes (60 * 5 seconds)
+	
+	function checkPaymentStatus() {
+		checkCount++;
+		
+		if (checkCount > maxChecks) {
+			clearInterval(checkInterval);
+			return;
+		}
+		
+		$.ajax({
+			url: '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+			type: 'POST',
+			data: {
+				action: 'vetraiz_check_payment_status',
+				payment_id: paymentId,
+				nonce: '<?php echo wp_create_nonce( 'vetraiz_check_payment' ); ?>'
+			},
+			success: function(response) {
+				if (response.success && response.data.status === 'received') {
+					// Payment received! Reload page to show updated status
+					clearInterval(checkInterval);
+					location.reload();
+				}
+			},
+			error: function() {
+				// Silently fail, continue checking
+			}
+		});
+	}
+	
+	// Start checking every 5 seconds
+	checkInterval = setInterval(checkPaymentStatus, 5000);
+	
+	// Also check immediately
+	setTimeout(checkPaymentStatus, 2000);
+	<?php endif; ?>
 });
 </script>
 

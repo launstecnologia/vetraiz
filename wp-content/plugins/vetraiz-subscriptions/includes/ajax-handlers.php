@@ -17,6 +17,10 @@ add_action( 'wp_ajax_nopriv_vetraiz_inline_login', 'vetraiz_handle_inline_login'
 add_action( 'wp_ajax_vetraiz_create_subscription', 'vetraiz_handle_create_subscription' );
 add_action( 'wp_ajax_nopriv_vetraiz_create_subscription', 'vetraiz_handle_create_subscription' );
 
+// Check payment status
+add_action( 'wp_ajax_vetraiz_check_payment_status', 'vetraiz_handle_check_payment_status' );
+add_action( 'wp_ajax_nopriv_vetraiz_check_payment_status', 'vetraiz_handle_check_payment_status' );
+
 /**
  * Handle inline login
  */
@@ -197,6 +201,50 @@ function vetraiz_handle_create_subscription() {
 	wp_send_json_success( array(
 		'message'  => $message,
 		'redirect' => $redirect_url,
+	) );
+}
+
+/**
+ * Handle check payment status
+ */
+function vetraiz_handle_check_payment_status() {
+	check_ajax_referer( 'vetraiz_check_payment', 'nonce' );
+	
+	$payment_id = isset( $_POST['payment_id'] ) ? intval( $_POST['payment_id'] ) : 0;
+	
+	if ( ! $payment_id ) {
+		wp_send_json_error( array( 'message' => 'ID do pagamento não fornecido.' ) );
+	}
+	
+	global $wpdb;
+	$payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
+	$payment = $wpdb->get_row( $wpdb->prepare(
+		"SELECT id, status, payment_date FROM $payments_table WHERE id = %d",
+		$payment_id
+	) );
+	
+	if ( ! $payment ) {
+		wp_send_json_error( array( 'message' => 'Pagamento não encontrado.' ) );
+	}
+	
+	// Check if user owns this payment
+	if ( ! is_user_logged_in() ) {
+		wp_send_json_error( array( 'message' => 'Usuário não autenticado.' ) );
+	}
+	
+	$user_id = get_current_user_id();
+	$payment_owner = $wpdb->get_var( $wpdb->prepare(
+		"SELECT user_id FROM $payments_table WHERE id = %d",
+		$payment_id
+	) );
+	
+	if ( intval( $payment_owner ) !== $user_id ) {
+		wp_send_json_error( array( 'message' => 'Acesso negado.' ) );
+	}
+	
+	wp_send_json_success( array(
+		'status' => $payment->status,
+		'payment_date' => $payment->payment_date,
 	) );
 }
 
