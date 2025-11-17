@@ -88,9 +88,24 @@ class Vetraiz_Subscriptions_Database {
 		dbDelta( $sql_payments );
 		
 		// Add payment_method column if it doesn't exist (for existing installations)
+		self::add_payment_method_column();
+	}
+	
+	/**
+	 * Add payment_method column if it doesn't exist
+	 */
+	public static function add_payment_method_column() {
+		global $wpdb;
+		$table_subscriptions = $wpdb->prefix . 'vetraiz_subscriptions';
+		
+		// Check if column exists
 		$column_exists = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM $table_subscriptions LIKE %s", 'payment_method' ) );
 		if ( empty( $column_exists ) ) {
 			$wpdb->query( "ALTER TABLE $table_subscriptions ADD COLUMN payment_method varchar(50) NOT NULL DEFAULT 'PIX' AFTER plan_value" );
+			
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ DATABASE: Added payment_method column to subscriptions table' );
+			}
 		}
 	}
 	

@@ -129,6 +129,9 @@ class Vetraiz_Subscriptions_Subscription {
 			error_log( 'VETRAIZ SUBSCRIPTION: Subscription created in Asaas - ID: ' . $asaas_subscription['id'] );
 		}
 		
+		// Ensure payment_method column exists
+		Vetraiz_Subscriptions_Database::add_payment_method_column();
+		
 		// Save subscription in database
 		$table = $wpdb->prefix . 'vetraiz_subscriptions';
 		$insert_result = $wpdb->insert(
