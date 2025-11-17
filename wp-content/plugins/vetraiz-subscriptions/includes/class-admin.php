@@ -38,24 +38,32 @@ class Vetraiz_Subscriptions_Admin {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_post_vetraiz_subscription_action', array( $this, 'handle_subscription_action' ) );
 		add_action( 'admin_post_vetraiz_payment_action', array( $this, 'handle_payment_action' ) );
+		
+		// Redirect wp-admin to dashboard
+		add_action( 'admin_init', array( $this, 'redirect_admin_to_dashboard' ) );
+		
+		// Remove update notices
+		add_action( 'admin_init', array( $this, 'remove_update_notices' ) );
 	}
 	
 	/**
 	 * Add admin menu
 	 */
 	public function add_admin_menu() {
+		// Make Dashboard the main page
 		add_menu_page(
 			'Vetraiz Assinaturas',
 			'Assinaturas',
 			'manage_options',
-			'vetraiz-subscriptions',
-			array( $this, 'render_settings_page' ),
+			'vetraiz-subscriptions-dashboard',
+			array( $this, 'render_dashboard' ),
 			'dashicons-video-alt3',
-			30
+			2 // Position 2, right after Dashboard
 		);
 		
+		// Add Dashboard as first submenu (will show as main menu item)
 		add_submenu_page(
-			'vetraiz-subscriptions',
+			'vetraiz-subscriptions-dashboard',
 			'Dashboard',
 			'Dashboard',
 			'manage_options',
