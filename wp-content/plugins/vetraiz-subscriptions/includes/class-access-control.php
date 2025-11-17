@@ -128,13 +128,21 @@ class Vetraiz_Subscriptions_Access_Control {
 		}
 		
 		// Log that we're protecting this page
+		$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+		$user_id = get_current_user_id();
+		
 		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
-			error_log( 'VETRAIZ ACCESS: Protecting video page - URL: ' . $current_url . ' - User logged in: ' . ( is_user_logged_in() ? 'YES' : 'NO' ) );
+			error_log( 'VETRAIZ ACCESS: Protecting video page - URL: ' . $current_url . ' - User ID: ' . $user_id . ' - Logged in: ' . ( is_user_logged_in() ? 'YES' : 'NO' ) );
 		}
 		
 		// Check if user has access
-		if ( ! $this->check_user_access() ) {
+		$has_access = $this->check_user_access();
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ ACCESS: Access check result - User ID: ' . $user_id . ' - Has access: ' . ( $has_access ? 'YES' : 'NO' ) );
+		}
+		
+		if ( ! $has_access ) {
 			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
 			
 			// Store redirect URL for after login/subscription
@@ -145,11 +153,15 @@ class Vetraiz_Subscriptions_Access_Control {
 			}
 			
 			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-				error_log( 'VETRAIZ ACCESS: Redirecting to: ' . $redirect_url );
+				error_log( 'VETRAIZ ACCESS: Redirecting user #' . $user_id . ' to: ' . $redirect_url );
 			}
 			
 			wp_redirect( $redirect_url );
 			exit;
+		} else {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' has access - Allowing page load' );
+			}
 		}
 	}
 	
@@ -319,32 +331,65 @@ class Vetraiz_Subscriptions_Access_Control {
 			$url_patterns = array_filter( $url_patterns );
 		}
 		
+		// Add default patterns
+		$default_patterns = array( '/conteudo-restrito/', '/videos/' );
+		$url_patterns = array_merge( $default_patterns, $url_patterns );
+		$url_patterns = array_unique( $url_patterns );
+		
 		if ( ! empty( $url_patterns ) ) {
 			$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+			
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: Checking URL patterns - Current URL: ' . $current_url );
+			}
+			
 			foreach ( $url_patterns as $pattern ) {
 				if ( ! empty( $pattern ) && false !== strpos( $current_url, $pattern ) ) {
+					if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+						error_log( 'VETRAIZ ACCESS: URL pattern matched - Pattern: ' . $pattern );
+					}
+					
 					// If URL matches pattern, check if it's a video post type that requires subscription
 					if ( is_singular() ) {
 						$post_id = get_the_ID();
+						
 						// Check if this specific post requires subscription
 						$requires_subscription = get_post_meta( $post_id, '_vetraiz_requires_subscription', true );
-						if ( ! $requires_subscription ) {
-							// Check JetEngine fields
-							$all_meta = get_post_meta( $post_id );
-							$found_subscription = false;
-							foreach ( $all_meta as $key => $values ) {
-								if ( is_array( $values ) && ! empty( $values[0] ) ) {
-									$value = strtolower( $values[0] );
-									if ( in_array( $value, array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
-										$found_subscription = true;
-										break;
-									}
+						
+						// Check JetEngine fields
+						$all_meta = get_post_meta( $post_id );
+						$found_subscription = false;
+						foreach ( $all_meta as $key => $values ) {
+							if ( is_array( $values ) && ! empty( $values[0] ) ) {
+								$value = strtolower( $values[0] );
+								if ( in_array( $value, array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+									$found_subscription = true;
+									break;
 								}
 							}
-							if ( ! $found_subscription ) {
-								return false; // URL matches but post doesn't require subscription
+						}
+						
+						// Check taxonomy
+						$taxonomies_to_check = array( 'tipos-de-videos', 'tipos_de_videos' );
+						foreach ( $taxonomies_to_check as $taxonomy ) {
+							if ( taxonomy_exists( $taxonomy ) && has_term( 'assinantes', $taxonomy, $post_id ) ) {
+								$found_subscription = true;
+								break;
 							}
 						}
+						
+						// If no subscription requirement found, don't protect
+						if ( ! $requires_subscription && ! $found_subscription ) {
+							if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+								error_log( 'VETRAIZ ACCESS: URL matches pattern but post does not require subscription - Post ID: ' . $post_id );
+							}
+							return false; // URL matches but post doesn't require subscription
+						}
+					}
+					
+					// URL matches pattern and requires subscription
+					if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+						error_log( 'VETRAIZ ACCESS: URL pattern matched and requires subscription' );
 					}
 					return true;
 				}
