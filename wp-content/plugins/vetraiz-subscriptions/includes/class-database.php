@@ -119,10 +119,30 @@ class Vetraiz_Subscriptions_Database {
 		global $wpdb;
 		$table = $wpdb->prefix . 'vetraiz_subscriptions';
 		
+		// Log the query
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ DATABASE: Searching for subscription - User ID: ' . $user_id );
+		}
+		
+		// First, try to get any subscription (not filtering by status)
 		$subscription = $wpdb->get_row( $wpdb->prepare(
 			"SELECT * FROM $table WHERE user_id = %d ORDER BY created_at DESC LIMIT 1",
 			$user_id
 		) );
+		
+		if ( ! $subscription ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				// Check if table exists and has any data
+				$table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$table'" );
+				$total_subscriptions = $wpdb->get_var( "SELECT COUNT(*) FROM $table" );
+				error_log( 'VETRAIZ DATABASE: No subscription found - Table exists: ' . ( $table_exists ? 'YES' : 'NO' ) . ' - Total subscriptions: ' . $total_subscriptions );
+			}
+			return null;
+		}
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ DATABASE: Subscription found - ID: ' . $subscription->id . ' - Status: ' . $subscription->status );
+		}
 		
 		// If subscription exists but status is not active, check if there's a received payment
 		if ( $subscription && ! in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
@@ -151,15 +171,15 @@ class Vetraiz_Subscriptions_Database {
 					"SELECT * FROM $table WHERE id = %d",
 					$subscription->id
 				) );
+				
+				if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+					error_log( 'VETRAIZ DATABASE: Updated subscription #' . $subscription->id . ' to active due to received payment' );
+				}
 			}
 		}
 		
-		// Return only if status is active or pending
-		if ( $subscription && in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
-			return $subscription;
-		}
-		
-		return null;
+		// Return subscription regardless of status (we'll check status in user_has_active_subscription)
+		return $subscription;
 	}
 	
 	/**

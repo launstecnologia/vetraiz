@@ -201,14 +201,17 @@ class Vetraiz_Subscriptions_Subscription {
 	 * @return object|null
 	 */
 	public static function get_user_subscription( $user_id ) {
-		// Try to get from cache first
-		$cache_key = 'vetraiz_subscription_user_' . $user_id;
-		$subscription = wp_cache_get( $cache_key, 'vetraiz_subscriptions' );
+		// Don't use cache for now to ensure fresh data
+		// $cache_key = 'vetraiz_subscription_user_' . $user_id;
+		// $subscription = wp_cache_get( $cache_key, 'vetraiz_subscriptions' );
 		
-		if ( false === $subscription ) {
-			$subscription = Vetraiz_Subscriptions_Database::get_subscription_by_user( $user_id );
-			wp_cache_set( $cache_key, $subscription, 'vetraiz_subscriptions', 3600 );
-		}
+		// Always get fresh data from database
+		$subscription = Vetraiz_Subscriptions_Database::get_subscription_by_user( $user_id );
+		
+		// Only cache if subscription exists
+		// if ( $subscription ) {
+		// 	wp_cache_set( $cache_key, $subscription, 'vetraiz_subscriptions', 300 ); // Cache for 5 minutes only
+		// }
 		
 		return $subscription;
 	}

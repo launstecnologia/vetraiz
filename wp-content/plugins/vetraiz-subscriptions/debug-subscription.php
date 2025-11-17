@@ -29,13 +29,25 @@ echo "<p><strong>Email:</strong> {$user->user_email}</p>";
 echo "<p><strong>ID:</strong> {$user_id}</p>";
 echo "<hr>";
 
-// Get subscription
+// Get subscription - try multiple methods
 global $wpdb;
 $subscription_table = $wpdb->prefix . 'vetraiz_subscriptions';
-$subscription = $wpdb->get_row( $wpdb->prepare(
-	"SELECT * FROM $subscription_table WHERE user_id = %d ORDER BY created_at DESC LIMIT 1",
+
+// First check if table exists
+$table_exists = $wpdb->get_var( "SHOW TABLES LIKE '$subscription_table'" );
+if ( ! $table_exists ) {
+	die( '<p style="color: red;">Tabela de assinaturas não existe! Execute a ativação do plugin.</p>' );
+}
+
+// Get all subscriptions for this user
+$all_subscriptions = $wpdb->get_results( $wpdb->prepare(
+	"SELECT * FROM $subscription_table WHERE user_id = %d ORDER BY created_at DESC",
 	$user_id
 ) );
+
+echo "<h2>Total de Assinaturas Encontradas: " . count( $all_subscriptions ) . "</h2>";
+
+$subscription = ! empty( $all_subscriptions ) ? $all_subscriptions[0] : null;
 
 if ( ! $subscription ) {
 	echo "<p style='color: red;'><strong>✗ Nenhuma assinatura encontrada!</strong></p>";
