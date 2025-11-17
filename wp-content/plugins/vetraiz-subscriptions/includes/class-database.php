@@ -104,10 +104,47 @@ class Vetraiz_Subscriptions_Database {
 		global $wpdb;
 		$table = $wpdb->prefix . 'vetraiz_subscriptions';
 		
-		return $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM $table WHERE user_id = %d AND status IN ('active', 'pending') ORDER BY created_at DESC LIMIT 1",
+		$subscription = $wpdb->get_row( $wpdb->prepare(
+			"SELECT * FROM $table WHERE user_id = %d ORDER BY created_at DESC LIMIT 1",
 			$user_id
 		) );
+		
+		// If subscription exists but status is not active, check if there's a received payment
+		if ( $subscription && ! in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
+			// Check if there's a received payment for this subscription
+			$payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
+			$received_payment = $wpdb->get_var( $wpdb->prepare(
+				"SELECT COUNT(*) FROM $payments_table WHERE subscription_id = %d AND status = 'received'",
+				$subscription->id
+			) );
+			
+			if ( $received_payment > 0 ) {
+				// Update subscription to active if payment is received
+				$wpdb->update(
+					$table,
+					array( 
+						'status' => 'active',
+						'updated_at' => current_time( 'mysql' ),
+					),
+					array( 'id' => $subscription->id ),
+					array( '%s', '%s' ),
+					array( '%d' )
+				);
+				
+				// Get updated subscription
+				$subscription = $wpdb->get_row( $wpdb->prepare(
+					"SELECT * FROM $table WHERE id = %d",
+					$subscription->id
+				) );
+			}
+		}
+		
+		// Return only if status is active or pending
+		if ( $subscription && in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
+			return $subscription;
+		}
+		
+		return null;
 	}
 	
 	/**

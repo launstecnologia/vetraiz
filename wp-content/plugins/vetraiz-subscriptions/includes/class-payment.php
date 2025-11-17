@@ -118,13 +118,13 @@ class Vetraiz_Subscriptions_Payment {
 		// Update subscription status if payment is received
 		if ( 'received' === strtolower( $status ) ) {
 			$payment = $wpdb->get_row( $wpdb->prepare(
-				"SELECT subscription_id FROM $table WHERE asaas_payment_id = %s",
+				"SELECT subscription_id, user_id FROM $table WHERE asaas_payment_id = %s",
 				$asaas_payment_id
 			) );
 			
 			if ( $payment ) {
 				$subscription_table = $wpdb->prefix . 'vetraiz_subscriptions';
-				$wpdb->update(
+				$update_result = $wpdb->update(
 					$subscription_table,
 					array( 
 						'status' => 'active',
@@ -134,6 +134,14 @@ class Vetraiz_Subscriptions_Payment {
 					array( '%s', '%s' ),
 					array( '%d' )
 				);
+				
+				// Log update
+				if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+					error_log( 'VETRAIZ: Subscription #' . $payment->subscription_id . ' updated to active for user #' . $payment->user_id );
+				}
+				
+				// Clear any caches
+				wp_cache_delete( 'vetraiz_subscription_user_' . $payment->user_id, 'vetraiz_subscriptions' );
 			}
 		}
 		

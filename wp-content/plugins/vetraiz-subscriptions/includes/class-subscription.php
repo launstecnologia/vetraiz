@@ -159,7 +159,16 @@ class Vetraiz_Subscriptions_Subscription {
 	 * @return object|null
 	 */
 	public static function get_user_subscription( $user_id ) {
-		return Vetraiz_Subscriptions_Database::get_subscription_by_user( $user_id );
+		// Try to get from cache first
+		$cache_key = 'vetraiz_subscription_user_' . $user_id;
+		$subscription = wp_cache_get( $cache_key, 'vetraiz_subscriptions' );
+		
+		if ( false === $subscription ) {
+			$subscription = Vetraiz_Subscriptions_Database::get_subscription_by_user( $user_id );
+			wp_cache_set( $cache_key, $subscription, 'vetraiz_subscriptions', 3600 );
+		}
+		
+		return $subscription;
 	}
 	
 	/**
@@ -170,7 +179,47 @@ class Vetraiz_Subscriptions_Subscription {
 	 */
 	public static function user_has_active_subscription( $user_id ) {
 		$subscription = self::get_user_subscription( $user_id );
-		return $subscription && 'active' === $subscription->status;
+		
+		if ( ! $subscription ) {
+			return false;
+		}
+		
+		// Check if subscription is active
+		if ( 'active' === $subscription->status ) {
+			return true;
+		}
+		
+		// If status is pending, check if there's a received payment
+		if ( 'pending' === $subscription->status ) {
+			global $wpdb;
+			$payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
+			$received_payment = $wpdb->get_var( $wpdb->prepare(
+				"SELECT COUNT(*) FROM $payments_table WHERE subscription_id = %d AND status = 'received'",
+				$subscription->id
+			) );
+			
+			if ( $received_payment > 0 ) {
+				// Update subscription to active
+				$subscription_table = $wpdb->prefix . 'vetraiz_subscriptions';
+				$wpdb->update(
+					$subscription_table,
+					array( 
+						'status' => 'active',
+						'updated_at' => current_time( 'mysql' ),
+					),
+					array( 'id' => $subscription->id ),
+					array( '%s', '%s' ),
+					array( '%d' )
+				);
+				
+				// Clear cache
+				wp_cache_delete( 'vetraiz_subscription_user_' . $user_id, 'vetraiz_subscriptions' );
+				
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }
 
