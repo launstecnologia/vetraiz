@@ -71,14 +71,149 @@ class Vetraiz_Subscriptions_Access_Control {
 			return false;
 		}
 		
-		// Check if user has active subscription
+		// Check if user has active subscription (custom system)
 		$has_access = Vetraiz_Subscriptions_Subscription::user_has_active_subscription( $user_id );
 		
-		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Has access: ' . ( $has_access ? 'YES' : 'NO' ) );
+		if ( $has_access ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Has access via custom subscription: YES' );
+			}
+			return true;
 		}
 		
-		return $has_access;
+		// Check if user has paid WooCommerce orders in the last 30 days
+		$has_woocommerce_access = $this->check_woocommerce_paid_access( $user_id );
+		
+		if ( $has_woocommerce_access ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Has access via WooCommerce payment (last 30 days): YES' );
+			}
+			return true;
+		}
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Has access: NO' );
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Check if user has paid WooCommerce orders in the last 30 days
+	 *
+	 * @param int $user_id User ID.
+	 * @return bool
+	 */
+	private function check_woocommerce_paid_access( $user_id ) {
+		// Check if WooCommerce is active
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return false;
+		}
+		
+		// Get paid order statuses
+		$paid_statuses = wc_get_is_paid_statuses();
+		
+		// Calculate date 30 days ago
+		$date_30_days_ago = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
+		
+		// Get user's paid orders from the last 30 days
+		$orders = wc_get_orders( array(
+			'customer_id' => $user_id,
+			'status'      => $paid_statuses,
+			'date_after'  => $date_30_days_ago,
+			'limit'       => 1,
+			'return'      => 'ids',
+		) );
+		
+		if ( ! empty( $orders ) ) {
+			// User has at least one paid order in the last 30 days
+			$order_id = $orders[0];
+			$order = wc_get_order( $order_id );
+			
+			if ( $order ) {
+				$payment_date = $order->get_date_paid();
+				if ( $payment_date ) {
+					$payment_timestamp = $payment_date->getTimestamp();
+					$days_since_payment = ( time() - $payment_timestamp ) / DAY_IN_SECONDS;
+					
+					if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+						error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Found paid order #' . $order_id . ' - Payment date: ' . $payment_date->date( 'Y-m-d H:i:s' ) . ' - Days since payment: ' . round( $days_since_payment, 2 ) );
+					}
+					
+					// Check if payment was within last 30 days
+					if ( $days_since_payment <= 30 ) {
+						return true;
+					}
+				} else {
+					// If no payment date, use order date
+					$order_date = $order->get_date_created();
+					if ( $order_date ) {
+						$order_timestamp = $order_date->getTimestamp();
+						$days_since_order = ( time() - $order_timestamp ) / DAY_IN_SECONDS;
+						
+						if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+							error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Found paid order #' . $order_id . ' - Order date: ' . $order_date->date( 'Y-m-d H:i:s' ) . ' - Days since order: ' . round( $days_since_order, 2 ) );
+						}
+						
+						if ( $days_since_order <= 30 ) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Check if user had WooCommerce access that expired (more than 30 days ago)
+	 *
+	 * @param int $user_id User ID.
+	 * @return bool
+	 */
+	private function check_expired_woocommerce_access( $user_id ) {
+		// Check if WooCommerce is active
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return false;
+		}
+		
+		// Get paid order statuses
+		$paid_statuses = wc_get_is_paid_statuses();
+		
+		// Get user's most recent paid order (any time)
+		$orders = wc_get_orders( array(
+			'customer_id' => $user_id,
+			'status'      => $paid_statuses,
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+			'limit'       => 1,
+			'return'      => 'ids',
+		) );
+		
+		if ( ! empty( $orders ) ) {
+			$order_id = $orders[0];
+			$order = wc_get_order( $order_id );
+			
+			if ( $order ) {
+				$payment_date = $order->get_date_paid();
+				if ( ! $payment_date ) {
+					$payment_date = $order->get_date_created();
+				}
+				
+				if ( $payment_date ) {
+					$payment_timestamp = $payment_date->getTimestamp();
+					$days_since_payment = ( time() - $payment_timestamp ) / DAY_IN_SECONDS;
+					
+					// If payment was more than 30 days ago, user had access but it expired
+					if ( $days_since_payment > 30 ) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -181,17 +316,31 @@ class Vetraiz_Subscriptions_Access_Control {
 		}
 		
 		if ( ! $has_access ) {
+			// Check if user had access via WooCommerce but it expired
+			$had_woocommerce_access = $this->check_expired_woocommerce_access( $user_id );
+			
 			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
 			
 			// Store redirect URL for after login/subscription
 			if ( ! is_user_logged_in() ) {
 				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), wp_login_url() );
 			} else {
-				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
+				// If user had WooCommerce access that expired, show a message
+				if ( $had_woocommerce_access ) {
+					$redirect_url = add_query_arg( 
+						array(
+							'redirect_to' => urlencode( get_permalink() ),
+							'expired' => '1',
+						),
+						$subscribe_url 
+					);
+				} else {
+					$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
+				}
 			}
 			
 			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-				error_log( 'VETRAIZ ACCESS: Redirecting user #' . $user_id . ' to: ' . $redirect_url );
+				error_log( 'VETRAIZ ACCESS: Redirecting user #' . $user_id . ' to: ' . $redirect_url . ' - Had WooCommerce access: ' . ( $had_woocommerce_access ? 'YES' : 'NO' ) );
 			}
 			
 			// Prevent other plugins from interfering

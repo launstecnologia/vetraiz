@@ -318,6 +318,12 @@
 	border: 1px solid #f5c6cb;
 }
 
+.vetraiz-alert-warning {
+	background: #fff3cd;
+	color: #856404;
+	border-left: 4px solid #ffc107;
+}
+
 /* Invoices Table */
 .vetraiz-invoices-table {
 	width: 100%;

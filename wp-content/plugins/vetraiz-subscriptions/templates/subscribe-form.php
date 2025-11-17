@@ -14,13 +14,18 @@ $plan_value = get_option( 'vetraiz_plan_value', '14.99' );
 $user = wp_get_current_user();
 $is_logged_in = is_user_logged_in();
 $redirect_to = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
+$expired = isset( $_GET['expired'] ) && '1' === $_GET['expired'];
 ?>
 
 <div class="vetraiz-subscribe-form-wrapper">
 	<div class="vetraiz-subscribe-form">
 		<div class="vetraiz-form-header">
 			<h2>Assinar <?php echo esc_html( $plan_name ); ?></h2>
-			<?php if ( $redirect_to ) : ?>
+			<?php if ( $expired ) : ?>
+				<div class="vetraiz-alert vetraiz-alert-warning">
+					<p><strong>Sua assinatura anterior expirou.</strong> Para continuar acessando o conteúdo, assine novamente.</p>
+				</div>
+			<?php elseif ( $redirect_to ) : ?>
 				<div class="vetraiz-alert vetraiz-alert-info">
 					<p>Você precisa de uma assinatura ativa para acessar este conteúdo.</p>
 				</div>
