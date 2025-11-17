@@ -47,6 +47,7 @@ class Vetraiz_Subscriptions_Database {
 			asaas_customer_id varchar(255) DEFAULT NULL,
 			plan_name varchar(255) NOT NULL,
 			plan_value decimal(10,2) NOT NULL,
+			payment_method varchar(50) NOT NULL DEFAULT 'PIX',
 			status varchar(50) NOT NULL DEFAULT 'pending',
 			start_date datetime DEFAULT NULL,
 			end_date datetime DEFAULT NULL,
@@ -85,6 +86,12 @@ class Vetraiz_Subscriptions_Database {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		dbDelta( $sql_subscriptions );
 		dbDelta( $sql_payments );
+		
+		// Add payment_method column if it doesn't exist (for existing installations)
+		$column_exists = $wpdb->get_results( $wpdb->prepare( "SHOW COLUMNS FROM $table_subscriptions LIKE %s", 'payment_method' ) );
+		if ( empty( $column_exists ) ) {
+			$wpdb->query( "ALTER TABLE $table_subscriptions ADD COLUMN payment_method varchar(50) NOT NULL DEFAULT 'PIX' AFTER plan_value" );
+		}
 	}
 	
 	/**

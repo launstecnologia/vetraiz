@@ -141,5 +141,15 @@ class Vetraiz_Subscriptions_Asaas_API {
 	public function get_pix_info( $payment_id ) {
 		return $this->request( "payments/{$payment_id}/pixQrCode", array(), 'GET' );
 	}
+	
+	/**
+	 * Create credit card token
+	 *
+	 * @param array $data Card data.
+	 * @return array|WP_Error
+	 */
+	public function create_credit_card_token( $data ) {
+		return $this->request( 'creditCard/tokenize', $data, 'POST' );
+	}
 }
 
