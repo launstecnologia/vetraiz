@@ -75,10 +75,18 @@ class Vetraiz_Subscriptions_Asaas_API {
 		
 		$body = wp_remote_retrieve_body( $response );
 		$code = wp_remote_retrieve_response_code( $response );
+		$decoded_body = json_decode( $body, true );
+		
+		// Log errors for debugging
+		if ( $code >= 400 ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ASAAS API ERROR: ' . $endpoint . ' - Code: ' . $code . ' - Response: ' . $body );
+			}
+		}
 		
 		return array(
 			'code' => $code,
-			'body' => json_decode( $body, true ),
+			'body' => $decoded_body,
 		);
 	}
 	

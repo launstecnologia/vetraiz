@@ -90,8 +90,23 @@ class Vetraiz_Subscriptions_Subscription {
 			$token_response = $api->create_credit_card_token( $token_data );
 			
 			if ( is_wp_error( $token_response ) || 200 !== $token_response['code'] ) {
-				$error_message = isset( $token_response['body']['errors'] ) ? json_encode( $token_response['body']['errors'] ) : 'Erro ao processar cartão';
-				return new WP_Error( 'card_tokenization_failed', 'Erro ao processar cartão: ' . $error_message );
+				// Better error handling
+				$error_message = 'Erro ao processar cartão';
+				
+				if ( isset( $token_response['body']['errors'] ) && is_array( $token_response['body']['errors'] ) ) {
+					$errors = $token_response['body']['errors'];
+					$error_message = isset( $errors[0]['description'] ) ? $errors[0]['description'] : json_encode( $errors );
+				} elseif ( isset( $token_response['body']['description'] ) ) {
+					$error_message = $token_response['body']['description'];
+				} elseif ( 403 === $token_response['code'] ) {
+					$error_message = 'Sua conta Asaas não possui permissão para processar cartões de crédito. Entre em contato com o suporte do Asaas para habilitar esta funcionalidade.';
+				}
+				
+				if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+					error_log( 'VETRAIZ SUBSCRIPTION: Card tokenization failed - Code: ' . ( is_wp_error( $token_response ) ? 'WP_Error' : $token_response['code'] ) . ' - Error: ' . $error_message );
+				}
+				
+				return new WP_Error( 'card_tokenization_failed', $error_message );
 			}
 			
 			$credit_card_token = $token_response['body']['creditCardToken'];
