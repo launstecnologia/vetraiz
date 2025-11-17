@@ -220,14 +220,27 @@ class Vetraiz_Subscriptions_Subscription {
 	 * @return bool
 	 */
 	public static function user_has_active_subscription( $user_id ) {
+		// Clear cache first to ensure we get fresh data
+		wp_cache_delete( 'vetraiz_subscription_user_' . $user_id, 'vetraiz_subscriptions' );
+		
 		$subscription = self::get_user_subscription( $user_id );
 		
 		if ( ! $subscription ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: No subscription found for user #' . $user_id );
+			}
 			return false;
+		}
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ SUBSCRIPTION: User #' . $user_id . ' - Subscription ID: ' . $subscription->id . ' - Status: ' . $subscription->status );
 		}
 		
 		// Check if subscription is active
 		if ( 'active' === $subscription->status ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: User #' . $user_id . ' has active subscription' );
+			}
 			return true;
 		}
 		
@@ -239,6 +252,10 @@ class Vetraiz_Subscriptions_Subscription {
 				"SELECT COUNT(*) FROM $payments_table WHERE subscription_id = %d AND status = 'received'",
 				$subscription->id
 			) );
+			
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: User #' . $user_id . ' - Pending subscription - Received payments: ' . $received_payment );
+			}
 			
 			if ( $received_payment > 0 ) {
 				// Update subscription to active
@@ -257,8 +274,16 @@ class Vetraiz_Subscriptions_Subscription {
 				// Clear cache
 				wp_cache_delete( 'vetraiz_subscription_user_' . $user_id, 'vetraiz_subscriptions' );
 				
+				if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+					error_log( 'VETRAIZ SUBSCRIPTION: Updated subscription #' . $subscription->id . ' to active for user #' . $user_id );
+				}
+				
 				return true;
 			}
+		}
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ SUBSCRIPTION: User #' . $user_id . ' does NOT have active subscription' );
 		}
 		
 		return false;

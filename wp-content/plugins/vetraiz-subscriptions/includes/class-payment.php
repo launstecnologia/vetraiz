@@ -142,6 +142,11 @@ class Vetraiz_Subscriptions_Payment {
 				
 				// Clear any caches
 				wp_cache_delete( 'vetraiz_subscription_user_' . $payment->user_id, 'vetraiz_subscriptions' );
+				
+				// Force refresh subscription check on next access
+				if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+					error_log( 'VETRAIZ PAYMENT: Cleared cache for user #' . $payment->user_id . ' after payment received' );
+				}
 			}
 		}
 		

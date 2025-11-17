@@ -59,11 +59,20 @@ class Vetraiz_Subscriptions_Access_Control {
 		}
 		
 		if ( ! $user_id ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: No user ID provided' );
+			}
 			return false;
 		}
 		
 		// Check if user has active subscription
-		return Vetraiz_Subscriptions_Subscription::user_has_active_subscription( $user_id );
+		$has_access = Vetraiz_Subscriptions_Subscription::user_has_active_subscription( $user_id );
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' - Has access: ' . ( $has_access ? 'YES' : 'NO' ) );
+		}
+		
+		return $has_access;
 	}
 	
 	/**
@@ -118,6 +127,12 @@ class Vetraiz_Subscriptions_Access_Control {
 			return;
 		}
 		
+		// Log that we're protecting this page
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+			error_log( 'VETRAIZ ACCESS: Protecting video page - URL: ' . $current_url . ' - User logged in: ' . ( is_user_logged_in() ? 'YES' : 'NO' ) );
+		}
+		
 		// Check if user has access
 		if ( ! $this->check_user_access() ) {
 			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
@@ -127,6 +142,10 @@ class Vetraiz_Subscriptions_Access_Control {
 				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), wp_login_url() );
 			} else {
 				$redirect_url = add_query_arg( 'redirect_to', urlencode( get_permalink() ), $subscribe_url );
+			}
+			
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: Redirecting to: ' . $redirect_url );
 			}
 			
 			wp_redirect( $redirect_url );
