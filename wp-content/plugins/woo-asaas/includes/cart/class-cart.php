@@ -172,9 +172,10 @@ class Cart {
 				}
 
 				// Disables PIX.
-				if ( true === $cart_has_subscription_products && array_key_exists( 'asaas-pix', $available_gateways ) ) {
-					unset( $available_gateways['asaas-pix'] );
-				}
+				// Comentado para permitir PIX em assinaturas (pode ser usado para pagamento inicial)
+				// if ( true === $cart_has_subscription_products && array_key_exists( 'asaas-pix', $available_gateways ) ) {
+				// 	unset( $available_gateways['asaas-pix'] );
+				// }
 			}
 		}
 

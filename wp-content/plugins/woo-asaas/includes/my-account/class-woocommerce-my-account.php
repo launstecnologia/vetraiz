@@ -8,6 +8,8 @@
 namespace WC_Asaas\My_Account;
 
 use Exception;
+use WC_Asaas\Subscription\Pix_Subscription_Invoices;
+use WC_Asaas\Meta_Data\Order;
 
 /**
  * Interact with WooCommerce My Account settings
@@ -64,13 +66,46 @@ class WooCommerce_My_Account {
 	 * @return array    $actions The filtered my orders actions.
 	 */
 	public function my_orders_actions( $actions, $order ) {
-		foreach ( $actions as $key => $values ) {
-			// Removes the pay action for Asaas Ticket and Asaas PIX orders.
-			if ( 'pay' === $key && in_array( $order->get_payment_method(), array( 'asaas-ticket', 'asaas-pix' ), true ) ) {
-				unset( $actions[ $key ] );
+		// For PIX orders, replace pay action with view PIX action
+		if ( 'asaas-pix' === $order->get_payment_method() ) {
+			// Remove default pay action
+			unset( $actions['pay'] );
+
+			// Add view/pay PIX action for pending orders
+			if ( $order->needs_payment() || $order->has_status( array( 'pending', 'on-hold', 'failed' ) ) ) {
+				$pix_invoices = Pix_Subscription_Invoices::get_instance();
+				$pix_info     = $pix_invoices->get_pix_payment_info( $order->get_id() );
+
+				if ( $pix_info || $this->is_subscription_renewal( $order ) ) {
+					$actions['pay-pix'] = array(
+						'url'  => wc_get_endpoint_url( 'view-pix-payment', $order->get_id(), wc_get_page_permalink( 'myaccount' ) ),
+						'name' => __( 'Pagar com PIX', 'woo-asaas' ),
+					);
+				}
 			}
 		}
+
+		// Removes the pay action for Asaas Ticket orders.
+		if ( 'asaas-ticket' === $order->get_payment_method() && isset( $actions['pay'] ) ) {
+			unset( $actions['pay'] );
+		}
+
 		return $actions;
+	}
+
+	/**
+	 * Check if order is a subscription renewal
+	 *
+	 * @param \WC_Order $order The order.
+	 * @return bool
+	 */
+	private function is_subscription_renewal( $order ) {
+		if ( ! function_exists( 'wcs_get_subscriptions_for_order' ) ) {
+			return false;
+		}
+
+		$subscriptions = wcs_get_subscriptions_for_order( $order, array( 'order_type' => array( 'renewal' ) ) );
+		return ! empty( $subscriptions );
 	}
 
 }

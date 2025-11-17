@@ -42,6 +42,7 @@ class Pix extends Gateway {
 		$this->supports = array(
 			'products',
 			'refunds',
+			'subscriptions',
 		);
 
 		add_action( 'woocommerce_thankyou_' . $this->id, array( $this, 'append_html_to_thankyou_page' ) );

@@ -32,9 +32,11 @@ use WC_Asaas\Product\Admin\Settings\Product_Settings;
 use WC_Asaas\Cart\Cart;
 use WC_Asaas\Coupon\Coupon;
 use WC_Asaas\Subscription\Subscription;
+use WC_Asaas\Subscription\Pix_Subscription_Invoices;
 use WC_Asaas\Subscription\Admin\Settings\WooCommerce_Subscriptions_Settings;
 use WC_Asaas\Subscription\Admin\Subscription_Admin;
 use WC_Asaas\My_Account\WooCommerce_My_Account;
+use WC_Asaas\My_Account\Pix_Payment_Endpoint;
 use WC_Asaas\Checkout\Checkout;
 use WC_Asaas\Webhook\Webhook_Ajax;
 
@@ -130,6 +132,12 @@ class WC_Asaas {
 		remove_filter( 'wcs_cart_totals_order_total_html', 'wcs_add_cart_first_renewal_payment_date', 10 );
 
 		add_filter( 'woocommerce_my_account_my_orders_actions', array( WooCommerce_My_Account::get_instance(), 'my_orders_actions' ), 10, 2 );
+
+		// Initialize PIX subscription invoices
+		Pix_Subscription_Invoices::get_instance();
+
+		// Initialize PIX payment endpoint
+		Pix_Payment_Endpoint::get_instance();
 
 		add_action( 'admin_notices', array( $this, 'check_checkout_settings' ) );
 
