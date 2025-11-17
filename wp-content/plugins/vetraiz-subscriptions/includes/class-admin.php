@@ -72,7 +72,7 @@ class Vetraiz_Subscriptions_Admin {
 		);
 		
 		add_submenu_page(
-			'vetraiz-subscriptions',
+			'vetraiz-subscriptions-dashboard',
 			'Configurações',
 			'Configurações',
 			'manage_options',
@@ -81,7 +81,7 @@ class Vetraiz_Subscriptions_Admin {
 		);
 		
 		add_submenu_page(
-			'vetraiz-subscriptions',
+			'vetraiz-subscriptions-dashboard',
 			'Todas as Assinaturas',
 			'Todas as Assinaturas',
 			'manage_options',
@@ -90,7 +90,7 @@ class Vetraiz_Subscriptions_Admin {
 		);
 		
 		add_submenu_page(
-			'vetraiz-subscriptions',
+			'vetraiz-subscriptions-dashboard',
 			'Pagamentos',
 			'Pagamentos',
 			'manage_options',
