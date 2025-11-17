@@ -40,11 +40,14 @@ class Vetraiz_Subscriptions_Access_Control {
 		// Filter to check access
 		add_filter( 'vetraiz_user_has_access', array( $this, 'check_user_access' ), 10, 1 );
 		
-		// Protect video pages
-		add_action( 'template_redirect', array( $this, 'protect_video_pages' ) );
+		// Protect video pages - use priority 5 to run early
+		add_action( 'template_redirect', array( $this, 'protect_video_pages' ), 5 );
 		
-		// Protect JetEngine custom post types (if video post type exists)
-		add_action( 'template_redirect', array( $this, 'protect_jetengine_videos' ) );
+		// Protect JetEngine custom post types (if video post type exists) - use priority 5 to run early
+		add_action( 'template_redirect', array( $this, 'protect_jetengine_videos' ), 5 );
+		
+		// Also try wp hook as fallback
+		add_action( 'wp', array( $this, 'protect_video_pages' ), 5 );
 	}
 	
 	/**
@@ -120,8 +123,18 @@ class Vetraiz_Subscriptions_Access_Control {
 	 * Protect video pages
 	 */
 	public function protect_video_pages() {
+		// Log that this method was called
+		$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ ACCESS: protect_video_pages() called - URL: ' . $current_url );
+		}
+		
 		// Check if this is a video page (you can customize this logic)
 		$is_video_page = $this->is_video_page();
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ ACCESS: is_video_page() result: ' . ( $is_video_page ? 'YES' : 'NO' ) );
+		}
 		
 		if ( ! $is_video_page ) {
 			return;
