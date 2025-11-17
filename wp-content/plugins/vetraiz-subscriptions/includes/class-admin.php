@@ -515,5 +515,152 @@ class Vetraiz_Subscriptions_Admin {
 		wp_safe_redirect( $redirect_url );
 		exit;
 	}
+	
+	/**
+	 * Reorganize admin menu
+	 */
+	public function reorganize_admin_menu() {
+		global $menu, $submenu;
+		
+		// Remove menus that should be under "Desenvolvedor"
+		$menus_to_hide = array(
+			'edit.php', // Posts
+			'upload.php', // Media
+			'edit.php?post_type=page', // Pages
+			'edit-comments.php', // Comments
+			'themes.php', // Appearance
+			'plugins.php', // Plugins
+			'users.php', // Users
+			'tools.php', // Tools
+			'options-general.php', // Settings
+			'edit.php?post_type=elementor_library', // Elementor Templates
+		);
+		
+		// Create "Desenvolvedor" menu
+		add_menu_page(
+			'Desenvolvedor',
+			'Desenvolvedor',
+			'manage_options',
+			'vetraiz-developer',
+			'',
+			'dashicons-admin-tools',
+			100
+		);
+		
+		// Add submenus under Desenvolvedor
+		add_submenu_page(
+			'vetraiz-developer',
+			'Posts',
+			'Posts',
+			'edit_posts',
+			'edit.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Mídia',
+			'Mídia',
+			'upload_files',
+			'upload.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Páginas',
+			'Páginas',
+			'edit_pages',
+			'edit.php?post_type=page',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Comentários',
+			'Comentários',
+			'moderate_comments',
+			'edit-comments.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Aparência',
+			'Aparência',
+			'switch_themes',
+			'themes.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Plugins',
+			'Plugins',
+			'activate_plugins',
+			'plugins.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Usuários',
+			'Usuários',
+			'list_users',
+			'users.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Ferramentas',
+			'Ferramentas',
+			'manage_options',
+			'tools.php',
+			''
+		);
+		
+		add_submenu_page(
+			'vetraiz-developer',
+			'Configurações',
+			'Configurações',
+			'manage_options',
+			'options-general.php',
+			''
+		);
+		
+		// Add Elementor Templates if Elementor exists
+		if ( class_exists( '\Elementor\Plugin' ) ) {
+			add_submenu_page(
+				'vetraiz-developer',
+				'Modelos Elementor',
+				'Modelos Elementor',
+				'edit_posts',
+				'edit.php?post_type=elementor_library',
+				''
+			);
+		}
+		
+		// Hide original menus from main sidebar
+		foreach ( $menus_to_hide as $menu_slug ) {
+			remove_menu_page( $menu_slug );
+		}
+		
+		// Add "Vídeos" menu if post type exists
+		if ( post_type_exists( 'videos' ) ) {
+			add_menu_page(
+				'Vídeos',
+				'Vídeos',
+				'edit_posts',
+				'edit.php?post_type=videos',
+				'',
+				'dashicons-video-alt2',
+				5
+			);
+		}
+		
+		// Ensure Assinaturas menu is in correct position
+		// Already handled in add_admin_menu()
+	}
 }
 
