@@ -21,7 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 			<div class="stat-content">
 				<div class="stat-value"><?php echo esc_html( number_format( $total_users, 0, ',', '.' ) ); ?></div>
-				<div class="stat-label">Total de Usuários</div>
+				<div class="stat-label">Total de Usuários no Sistema</div>
+				<?php if ( isset( $users_with_subscription ) ) : ?>
+					<div class="stat-sublabel"><?php echo esc_html( number_format( $users_with_subscription, 0, ',', '.' ) ); ?> com assinatura</div>
+				<?php endif; ?>
 			</div>
 		</div>
 		
@@ -244,6 +247,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	color: #666;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+}
+
+.stat-sublabel {
+	font-size: 12px;
+	color: #999;
+	margin-top: 5px;
+	font-weight: normal;
+	text-transform: none;
 }
 
 .vetraiz-dashboard-actions {

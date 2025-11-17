@@ -136,8 +136,13 @@ class Vetraiz_Subscriptions_Admin {
 		$table_subscriptions = $wpdb->prefix . 'vetraiz_subscriptions';
 		$table_payments = $wpdb->prefix . 'vetraiz_subscription_payments';
 		
-		// Total de usuários com assinatura
+		// Total de usuários no sistema WordPress
 		$total_users = $wpdb->get_var( 
+			"SELECT COUNT(*) FROM {$wpdb->users}"
+		);
+		
+		// Total de usuários com assinatura (para referência)
+		$users_with_subscription = $wpdb->get_var( 
 			"SELECT COUNT(DISTINCT user_id) FROM $table_subscriptions"
 		);
 		
