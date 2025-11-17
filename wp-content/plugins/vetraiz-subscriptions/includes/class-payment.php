@@ -90,20 +90,28 @@ class Vetraiz_Subscriptions_Payment {
 	 *
 	 * @param string $asaas_payment_id Asaas payment ID.
 	 * @param string $status New status.
+	 * @param string $payment_date Payment date (optional).
 	 * @return bool
 	 */
-	public static function update_status( $asaas_payment_id, $status ) {
+	public static function update_status( $asaas_payment_id, $status, $payment_date = null ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'vetraiz_subscription_payments';
 		
+		$update_data = array(
+			'status'     => strtolower( $status ),
+			'updated_at' => current_time( 'mysql' ),
+		);
+		
+		// Set payment date when payment is received
+		if ( 'received' === strtolower( $status ) ) {
+			$update_data['payment_date'] = $payment_date ? $payment_date : current_time( 'mysql' );
+		}
+		
 		$result = $wpdb->update(
 			$table,
-			array(
-				'status'     => strtolower( $status ),
-				'updated_at' => current_time( 'mysql' ),
-			),
+			$update_data,
 			array( 'asaas_payment_id' => $asaas_payment_id ),
-			array( '%s', '%s' ),
+			array( '%s', '%s', '%s' ),
 			array( '%s' )
 		);
 		
@@ -118,9 +126,12 @@ class Vetraiz_Subscriptions_Payment {
 				$subscription_table = $wpdb->prefix . 'vetraiz_subscriptions';
 				$wpdb->update(
 					$subscription_table,
-					array( 'status' => 'active' ),
+					array( 
+						'status' => 'active',
+						'updated_at' => current_time( 'mysql' ),
+					),
 					array( 'id' => $payment->subscription_id ),
-					array( '%s' ),
+					array( '%s', '%s' ),
 					array( '%d' )
 				);
 			}

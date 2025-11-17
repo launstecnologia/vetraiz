@@ -102,10 +102,22 @@ class Vetraiz_Subscriptions_Webhook {
 		}
 		
 		$payment_id = $data['payment']['id'];
+		$payment_date = isset( $data['payment']['paymentDate'] ) ? date( 'Y-m-d H:i:s', strtotime( $data['payment']['paymentDate'] ) ) : null;
+		
+		// Log webhook received
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ WEBHOOK: PAYMENT_RECEIVED - Payment ID: ' . $payment_id . ' - Date: ' . $payment_date );
+		}
+		
 		$payment = Vetraiz_Subscriptions_Database::get_payment_by_asaas_id( $payment_id );
 		
 		if ( $payment ) {
-			Vetraiz_Subscriptions_Payment::update_status( $payment_id, 'received' );
+			Vetraiz_Subscriptions_Payment::update_status( $payment_id, 'received', $payment_date );
+			
+			// Log update
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ WEBHOOK: Payment status updated to received for payment: ' . $payment_id );
+			}
 		} else {
 			// Payment not found, try to create it
 			global $wpdb;
@@ -117,7 +129,12 @@ class Vetraiz_Subscriptions_Webhook {
 			
 			if ( $subscription ) {
 				Vetraiz_Subscriptions_Payment::create_from_asaas( $subscription->id, $subscription->user_id, $data['payment'] );
-				Vetraiz_Subscriptions_Payment::update_status( $payment_id, 'received' );
+				Vetraiz_Subscriptions_Payment::update_status( $payment_id, 'received', $payment_date );
+				
+				// Log creation
+				if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+					error_log( 'VETRAIZ WEBHOOK: Payment created and updated to received for payment: ' . $payment_id );
+				}
 			}
 		}
 	}
