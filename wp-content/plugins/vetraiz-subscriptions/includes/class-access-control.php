@@ -40,14 +40,17 @@ class Vetraiz_Subscriptions_Access_Control {
 		// Filter to check access
 		add_filter( 'vetraiz_user_has_access', array( $this, 'check_user_access' ), 10, 1 );
 		
-		// Protect video pages - use priority 5 to run early
-		add_action( 'template_redirect', array( $this, 'protect_video_pages' ), 5 );
+		// Protect video pages - use priority 1 to run VERY early, before WooCommerce Memberships
+		add_action( 'template_redirect', array( $this, 'protect_video_pages' ), 1 );
 		
-		// Protect JetEngine custom post types (if video post type exists) - use priority 5 to run early
-		add_action( 'template_redirect', array( $this, 'protect_jetengine_videos' ), 5 );
+		// Protect JetEngine custom post types (if video post type exists) - use priority 1 to run early
+		add_action( 'template_redirect', array( $this, 'protect_jetengine_videos' ), 1 );
 		
-		// Also try wp hook as fallback
-		add_action( 'wp', array( $this, 'protect_video_pages' ), 5 );
+		// Also try wp hook as fallback with high priority
+		add_action( 'wp', array( $this, 'protect_video_pages' ), 1 );
+		
+		// Try init hook as well for early execution
+		add_action( 'init', array( $this, 'maybe_protect_early' ), 999 );
 	}
 	
 	/**
@@ -120,6 +123,28 @@ class Vetraiz_Subscriptions_Access_Control {
 	}
 	
 	/**
+	 * Early protection check (on init hook)
+	 */
+	public function maybe_protect_early() {
+		// Only check if we're on frontend and not in admin
+		if ( is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+			return;
+		}
+		
+		$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+		
+		// Quick check for protected URL patterns
+		if ( false !== strpos( $current_url, '/conteudo-restrito/' ) || false !== strpos( $current_url, '/videos/' ) ) {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ ACCESS: Early protection check - URL: ' . $current_url );
+			}
+			
+			// This will be handled by protect_video_pages on template_redirect
+			// Just log for now
+		}
+	}
+	
+	/**
 	 * Protect video pages
 	 */
 	public function protect_video_pages() {
@@ -169,11 +194,22 @@ class Vetraiz_Subscriptions_Access_Control {
 				error_log( 'VETRAIZ ACCESS: Redirecting user #' . $user_id . ' to: ' . $redirect_url );
 			}
 			
+			// Prevent other plugins from interfering
+			remove_all_actions( 'template_redirect' );
+			remove_all_actions( 'wp' );
+			
 			wp_redirect( $redirect_url );
 			exit;
 		} else {
 			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
 				error_log( 'VETRAIZ ACCESS: User #' . $user_id . ' has access - Allowing page load' );
+			}
+			
+			// User has access, but we need to make sure WooCommerce Memberships doesn't block
+			// Add filter to bypass WooCommerce Memberships restrictions for this user
+			if ( class_exists( 'WC_Memberships' ) ) {
+				add_filter( 'wc_memberships_user_has_member_discount', '__return_true', 999 );
+				add_filter( 'wc_memberships_restrict_content', '__return_false', 999 );
 			}
 		}
 	}
