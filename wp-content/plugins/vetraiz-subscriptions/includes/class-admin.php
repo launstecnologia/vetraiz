@@ -69,6 +69,15 @@ class Vetraiz_Subscriptions_Admin {
 			'vetraiz-subscriptions-list',
 			array( $this, 'render_subscriptions_list' )
 		);
+		
+		add_submenu_page(
+			'vetraiz-subscriptions',
+			'Pagamentos',
+			'Pagamentos',
+			'manage_options',
+			'vetraiz-subscriptions-payments',
+			array( $this, 'render_payments_list' )
+		);
 	}
 	
 	/**
@@ -121,9 +130,57 @@ class Vetraiz_Subscriptions_Admin {
 	public function render_subscriptions_list() {
 		global $wpdb;
 		$table = $wpdb->prefix . 'vetraiz_subscriptions';
-		$subscriptions = $wpdb->get_results( "SELECT * FROM $table ORDER BY created_at DESC" );
+		$payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
+		
+		// Get subscriptions with payment counts
+		$subscriptions = $wpdb->get_results( 
+			"SELECT s.*, 
+				COUNT(p.id) as payment_count,
+				SUM(CASE WHEN p.status = 'received' THEN 1 ELSE 0 END) as received_count
+			FROM $table s
+			LEFT JOIN $payments_table p ON s.id = p.subscription_id
+			GROUP BY s.id
+			ORDER BY s.created_at DESC"
+		);
 		
 		include VETRAIZ_SUBSCRIPTIONS_PLUGIN_DIR . 'templates/admin/subscriptions-list.php';
+	}
+	
+	/**
+	 * Render payments list
+	 */
+	public function render_payments_list() {
+		global $wpdb;
+		$payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
+		$subscriptions_table = $wpdb->prefix . 'vetraiz_subscriptions';
+		
+		$subscription_id = isset( $_GET['subscription_id'] ) ? intval( $_GET['subscription_id'] ) : 0;
+		
+		if ( $subscription_id > 0 ) {
+			$payments = $wpdb->get_results( $wpdb->prepare(
+				"SELECT p.*, s.plan_name, s.user_id 
+				FROM $payments_table p
+				INNER JOIN $subscriptions_table s ON p.subscription_id = s.id
+				WHERE p.subscription_id = %d
+				ORDER BY p.created_at DESC",
+				$subscription_id
+			) );
+			$subscription = $wpdb->get_row( $wpdb->prepare(
+				"SELECT * FROM $subscriptions_table WHERE id = %d",
+				$subscription_id
+			) );
+		} else {
+			$payments = $wpdb->get_results( 
+				"SELECT p.*, s.plan_name, s.user_id 
+				FROM $payments_table p
+				INNER JOIN $subscriptions_table s ON p.subscription_id = s.id
+				ORDER BY p.created_at DESC
+				LIMIT 100"
+			);
+			$subscription = null;
+		}
+		
+		include VETRAIZ_SUBSCRIPTIONS_PLUGIN_DIR . 'templates/admin/payments-list.php';
 	}
 }
 
