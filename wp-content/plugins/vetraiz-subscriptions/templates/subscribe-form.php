@@ -16,167 +16,221 @@ $is_logged_in = is_user_logged_in();
 $redirect_to = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
 ?>
 
-<div class="vetraiz-subscribe-form">
-	<h2>Assinar <?php echo esc_html( $plan_name ); ?></h2>
-	
-	<?php if ( $redirect_to ) : ?>
-		<div class="vetraiz-alert vetraiz-alert-info">
-			<p>Você precisa de uma assinatura ativa para acessar este conteúdo.</p>
+<div class="vetraiz-subscribe-form-wrapper">
+	<div class="vetraiz-subscribe-form">
+		<div class="vetraiz-form-header">
+			<h2>Assinar <?php echo esc_html( $plan_name ); ?></h2>
+			<?php if ( $redirect_to ) : ?>
+				<div class="vetraiz-alert vetraiz-alert-info">
+					<p>Você precisa de uma assinatura ativa para acessar este conteúdo.</p>
+				</div>
+			<?php endif; ?>
 		</div>
-	<?php endif; ?>
-	
-	<?php if ( ! $is_logged_in ) : ?>
-		<div class="vetraiz-login-section" style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-			<h3>Já tem uma conta? <a href="#" id="vetraiz-show-login" style="color: #0073aa;">Fazer Login</a></h3>
-			<div id="vetraiz-login-form" style="display: none; margin-top: 15px;">
-				<form id="vetraiz-login-form-inline">
-					<div class="form-group">
-						<label for="login_email">E-mail</label>
-						<input type="email" id="login_email" name="login_email" required>
-					</div>
-					<div class="form-group">
-						<label for="login_password">Senha</label>
-						<input type="password" id="login_password" name="login_password" required>
-					</div>
-					<button type="submit" class="button">Entrar</button>
-					<div id="vetraiz-login-message" style="margin-top: 10px;"></div>
-				</form>
-			</div>
-		</div>
-	<?php endif; ?>
-	
-	<form id="vetraiz-subscribe-form" method="post" action="">
-		<?php wp_nonce_field( 'vetraiz_subscribe', 'vetraiz_subscribe_nonce' ); ?>
-		<?php if ( $redirect_to ) : ?>
-			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>">
-		<?php endif; ?>
 		
 		<?php if ( ! $is_logged_in ) : ?>
-			<h3>Dados de Acesso</h3>
-			<div class="form-group">
-				<label for="user_email">E-mail *</label>
-				<input type="email" id="user_email" name="user_email" required>
-			</div>
-			
-			<div class="form-group">
-				<label for="user_password">Senha *</label>
-				<input type="password" id="user_password" name="user_password" minlength="6" required>
-				<small style="color: #666;">Mínimo 6 caracteres</small>
-			</div>
-			
-			<div class="form-group">
-				<label for="user_password_confirm">Confirmar Senha *</label>
-				<input type="password" id="user_password_confirm" name="user_password_confirm" minlength="6" required>
+			<div class="vetraiz-login-section">
+				<p>Já tem uma conta? <a href="#" id="vetraiz-show-login">Fazer Login</a></p>
+				<div id="vetraiz-login-form" style="display: none; margin-top: 15px;">
+					<form id="vetraiz-login-form-inline">
+						<div class="form-group">
+							<label for="login_email">E-mail</label>
+							<input type="email" id="login_email" name="login_email" required>
+						</div>
+						<div class="form-group">
+							<label for="login_password">Senha</label>
+							<input type="password" id="login_password" name="login_password" required>
+						</div>
+						<button type="submit" class="button">Entrar</button>
+						<div id="vetraiz-login-message" style="margin-top: 10px;"></div>
+					</form>
+				</div>
 			</div>
 		<?php endif; ?>
 		
-		<h3>Dados Pessoais</h3>
-		<div class="form-group">
-			<label for="user_name">Nome Completo *</label>
-			<input type="text" id="user_name" name="user_name" value="<?php echo esc_attr( $user->display_name ); ?>" required>
-		</div>
-		
-		<?php if ( $is_logged_in ) : ?>
-			<div class="form-group">
-				<label for="user_email">E-mail *</label>
-				<input type="email" id="user_email" name="user_email" value="<?php echo esc_attr( $user->user_email ); ?>" required>
-			</div>
-		<?php endif; ?>
-		
-		<div class="form-group">
-			<label for="user_phone">Telefone *</label>
-			<input type="text" id="user_phone" name="user_phone" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_phone', true ) ); ?>" required>
-		</div>
-		
-		<div class="form-group">
-			<label for="user_cpf">CPF *</label>
-			<input type="text" id="user_cpf" name="user_cpf" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_cpf', true ) ); ?>" required>
-		</div>
-		
-		<div class="form-group">
-			<label for="user_birthdate">Data de Nascimento *</label>
-			<input type="date" id="user_birthdate" name="user_birthdate" required>
-		</div>
-		
-		<div class="form-group">
-			<label for="user_postcode">CEP *</label>
-			<input type="text" id="user_postcode" name="user_postcode" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_postcode', true ) ); ?>" required>
-		</div>
-		
-		<div class="form-group">
-			<label for="user_address">Endereço *</label>
-			<input type="text" id="user_address" name="user_address" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_address_1', true ) ); ?>" required>
-		</div>
-		
-		<div class="form-group">
-			<label for="user_city">Cidade *</label>
-			<input type="text" id="user_city" name="user_city" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_city', true ) ); ?>" required>
-		</div>
-		
-		<div class="form-group">
-			<label for="user_state">Estado *</label>
-			<select id="user_state" name="user_state" required>
-				<option value="">Selecione</option>
-				<?php
-				$states = array( 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO' );
-				foreach ( $states as $state ) {
-					$selected = selected( get_user_meta( $user->ID, 'billing_state', true ), $state, false );
-					echo '<option value="' . esc_attr( $state ) . '" ' . $selected . '>' . esc_html( $state ) . '</option>';
-				}
-				?>
-			</select>
-		</div>
-		
-		<div class="plan-summary">
-			<h3>Resumo da Assinatura</h3>
-			<p><strong>Plano:</strong> <?php echo esc_html( $plan_name ); ?></p>
-			<p><strong>Valor:</strong> R$ <?php echo esc_html( number_format( $plan_value, 2, ',', '.' ) ); ?> / mês</p>
-		</div>
-		
-		<h3>Forma de Pagamento</h3>
-		<div class="form-group">
-			<label>
-				<input type="radio" name="payment_method" value="PIX" checked>
-				<span style="margin-left: 8px;">PIX - Você receberá uma fatura mensal para pagar</span>
-			</label>
-		</div>
-		<div class="form-group">
-			<label>
-				<input type="radio" name="payment_method" value="CREDIT_CARD">
-				<span style="margin-left: 8px;">Cartão de Crédito - Débito automático mensal</span>
-			</label>
-		</div>
-		
-		<div id="vetraiz-card-fields" style="display: none; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-			<h4>Dados do Cartão</h4>
-			<div class="form-group">
-				<label for="card_holder_name">Nome no Cartão *</label>
-				<input type="text" id="card_holder_name" name="card_holder_name" placeholder="Nome como está no cartão">
-			</div>
+		<form id="vetraiz-subscribe-form" method="post" action="">
+			<?php wp_nonce_field( 'vetraiz_subscribe', 'vetraiz_subscribe_nonce' ); ?>
+			<?php if ( $redirect_to ) : ?>
+				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>">
+			<?php endif; ?>
 			
-			<div class="form-group">
-				<label for="card_number">Número do Cartão *</label>
-				<input type="text" id="card_number" name="card_number" maxlength="19" placeholder="0000 0000 0000 0000">
-			</div>
-			
-			<div class="form-row" style="display: flex; gap: 15px;">
-				<div class="form-group" style="flex: 1;">
-					<label for="card_expiry">Validade (MM/AA) *</label>
-					<input type="text" id="card_expiry" name="card_expiry" maxlength="5" placeholder="MM/AA">
+			<div class="vetraiz-form-grid">
+				<!-- Coluna Esquerda: Dados Pessoais -->
+				<div class="vetraiz-form-column vetraiz-form-left">
+					<?php if ( ! $is_logged_in ) : ?>
+						<div class="form-section">
+							<h3>Dados de Acesso</h3>
+							<div class="form-group">
+								<label for="user_email">E-mail *</label>
+								<input type="email" id="user_email" name="user_email" required>
+							</div>
+							
+							<div class="form-group">
+								<label for="user_password">Senha *</label>
+								<input type="password" id="user_password" name="user_password" minlength="6" required>
+								<small>Mínimo 6 caracteres</small>
+							</div>
+							
+							<div class="form-group">
+								<label for="user_password_confirm">Confirmar Senha *</label>
+								<input type="password" id="user_password_confirm" name="user_password_confirm" minlength="6" required>
+							</div>
+						</div>
+					<?php endif; ?>
+					
+					<div class="form-section">
+						<h3>Dados Pessoais</h3>
+						<div class="form-group">
+							<label for="user_name">Nome Completo *</label>
+							<input type="text" id="user_name" name="user_name" value="<?php echo esc_attr( $user->display_name ); ?>" required>
+						</div>
+						
+						<?php if ( $is_logged_in ) : ?>
+							<div class="form-group">
+								<label for="user_email">E-mail *</label>
+								<input type="email" id="user_email" name="user_email" value="<?php echo esc_attr( $user->user_email ); ?>" required>
+							</div>
+						<?php endif; ?>
+						
+						<div class="form-row">
+							<div class="form-group">
+								<label for="user_phone">Telefone *</label>
+								<input type="text" id="user_phone" name="user_phone" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_phone', true ) ); ?>" required>
+							</div>
+							
+							<div class="form-group">
+								<label for="user_cpf">CPF *</label>
+								<input type="text" id="user_cpf" name="user_cpf" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_cpf', true ) ); ?>" required>
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<label for="user_birthdate">Data de Nascimento *</label>
+							<input type="date" id="user_birthdate" name="user_birthdate" required>
+						</div>
+						
+						<div class="form-group">
+							<label for="user_postcode">CEP *</label>
+							<input type="text" id="user_postcode" name="user_postcode" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_postcode', true ) ); ?>" required>
+						</div>
+						
+						<div class="form-group">
+							<label for="user_address">Endereço *</label>
+							<input type="text" id="user_address" name="user_address" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_address_1', true ) ); ?>" required>
+						</div>
+						
+						<div class="form-row">
+							<div class="form-group">
+								<label for="user_city">Cidade *</label>
+								<input type="text" id="user_city" name="user_city" value="<?php echo esc_attr( get_user_meta( $user->ID, 'billing_city', true ) ); ?>" required>
+							</div>
+							
+							<div class="form-group">
+								<label for="user_state">Estado *</label>
+								<select id="user_state" name="user_state" required>
+									<option value="">Selecione</option>
+									<?php
+									$states = array( 'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO' );
+									foreach ( $states as $state ) {
+										$selected = selected( get_user_meta( $user->ID, 'billing_state', true ), $state, false );
+										echo '<option value="' . esc_attr( $state ) . '" ' . $selected . '>' . esc_html( $state ) . '</option>';
+									}
+									?>
+								</select>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div class="form-group" style="flex: 1;">
-					<label for="card_cvv">CVV *</label>
-					<input type="text" id="card_cvv" name="card_cvv" maxlength="4" placeholder="123">
+				
+				<!-- Coluna Direita: Resumo e Pagamento -->
+				<div class="vetraiz-form-column vetraiz-form-right">
+					<div class="form-section">
+						<h3>Resumo da Assinatura</h3>
+						<div class="plan-summary">
+							<div class="plan-item">
+								<span class="plan-label">Plano:</span>
+								<span class="plan-value"><?php echo esc_html( $plan_name ); ?></span>
+							</div>
+							<div class="plan-item">
+								<span class="plan-label">Valor:</span>
+								<span class="plan-value plan-price">R$ <?php echo esc_html( number_format( $plan_value, 2, ',', '.' ) ); ?> / mês</span>
+							</div>
+						</div>
+					</div>
+					
+					<div class="form-section">
+						<h3>Forma de Pagamento</h3>
+						<div class="payment-methods">
+							<label class="payment-method-option" for="payment_pix">
+								<input type="radio" id="payment_pix" name="payment_method" value="PIX" checked>
+								<div class="payment-method-content">
+									<div class="payment-icon">
+										<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+											<rect width="40" height="40" rx="8" fill="#32BCAD"/>
+											<path d="M20 10C14.48 10 10 14.48 10 20C10 25.52 14.48 30 20 30C25.52 30 30 25.52 30 20C30 14.48 25.52 10 20 10ZM20 28C15.59 28 12 24.41 12 20C12 15.59 15.59 12 20 12C24.41 12 28 15.59 28 20C28 24.41 24.41 28 20 28Z" fill="white"/>
+											<path d="M20 14C17.79 14 16 15.79 16 18C16 20.21 17.79 22 20 22C22.21 22 24 20.21 24 18C24 15.79 22.21 14 20 14Z" fill="white"/>
+										</svg>
+									</div>
+									<div class="payment-method-info">
+										<span class="payment-method-name">PIX</span>
+										<span class="payment-method-desc">Fatura mensal para pagar</span>
+									</div>
+								</div>
+							</label>
+							
+							<label class="payment-method-option" for="payment_card">
+								<input type="radio" id="payment_card" name="payment_method" value="CREDIT_CARD">
+								<div class="payment-method-content">
+									<div class="payment-icon">
+										<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+											<rect width="40" height="40" rx="8" fill="#1A73E8"/>
+											<rect x="8" y="14" width="24" height="16" rx="2" fill="white"/>
+											<rect x="10" y="18" width="20" height="2" rx="1" fill="#1A73E8"/>
+											<rect x="10" y="22" width="8" height="2" rx="1" fill="#1A73E8"/>
+											<rect x="20" y="22" width="10" height="2" rx="1" fill="#1A73E8"/>
+										</svg>
+									</div>
+									<div class="payment-method-info">
+										<span class="payment-method-name">Cartão de Crédito</span>
+										<span class="payment-method-desc">Débito automático mensal</span>
+									</div>
+								</div>
+							</label>
+						</div>
+						
+						<div id="vetraiz-card-fields" class="card-fields-section">
+							<h4>Dados do Cartão</h4>
+							<div class="form-group">
+								<label for="card_holder_name">Nome no Cartão *</label>
+								<input type="text" id="card_holder_name" name="card_holder_name" placeholder="Nome como está no cartão">
+							</div>
+							
+							<div class="form-group">
+								<label for="card_number">Número do Cartão *</label>
+								<input type="text" id="card_number" name="card_number" maxlength="19" placeholder="0000 0000 0000 0000">
+							</div>
+							
+							<div class="form-row">
+								<div class="form-group">
+									<label for="card_expiry">Validade (MM/AA) *</label>
+									<input type="text" id="card_expiry" name="card_expiry" maxlength="5" placeholder="MM/AA">
+								</div>
+								<div class="form-group">
+									<label for="card_cvv">CVV *</label>
+									<input type="text" id="card_cvv" name="card_cvv" maxlength="4" placeholder="123">
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="form-actions">
+						<button type="submit" class="button button-primary button-large">Assinar Agora</button>
+					</div>
+					
+					<div id="vetraiz-subscribe-message" style="display: none; margin-top: 20px;"></div>
 				</div>
 			</div>
-		</div>
-		
-		<div class="form-actions">
-			<button type="submit" class="button button-primary">Assinar Agora</button>
-		</div>
-		
-		<div id="vetraiz-subscribe-message" style="display: none; margin-top: 20px;"></div>
-	</form>
+		</form>
+	</div>
 </div>
 
 <script>
