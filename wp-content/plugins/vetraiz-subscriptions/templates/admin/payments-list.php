@@ -42,6 +42,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="wrap vetraiz-payments-admin">
 	<h1>Pagamentos</h1>
 	
+	<?php
+	// Show success/error messages
+	if ( isset( $_GET['message'] ) ) {
+		if ( 'success' === $_GET['message'] ) {
+			echo '<div class="notice notice-success is-dismissible"><p>Ação executada com sucesso!</p></div>';
+		} elseif ( 'error' === $_GET['message'] && isset( $_GET['error_msg'] ) ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( urldecode( $_GET['error_msg'] ) ) . '</p></div>';
+		}
+	}
+	?>
+	
 	<?php if ( $subscription ) : ?>
 		<?php $user = get_userdata( $subscription->user_id ); ?>
 		<div class="notice notice-info">
@@ -78,12 +89,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<th>Data de Pagamento</th>
 				<th>Asaas Payment ID</th>
 				<th>Data de Criação</th>
+				<th style="width: 150px;">Ações</th>
 			</tr>
 		</thead>
 		<tbody>
 			<?php if ( empty( $payments ) ) : ?>
 				<tr>
-					<td colspan="9">Nenhum pagamento encontrado.</td>
+					<td colspan="10">Nenhum pagamento encontrado.</td>
 				</tr>
 			<?php else : ?>
 				<?php foreach ( $payments as $payment ) : ?>
@@ -115,6 +127,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									'pending' => 'Pendente',
 									'overdue' => 'Vencido',
 									'cancelled' => 'Cancelado',
+									'refunded' => 'Reembolsado',
 								);
 								echo esc_html( isset( $status_labels[ $payment->status ] ) ? $status_labels[ $payment->status ] : ucfirst( $payment->status ) ); 
 								?>
@@ -130,6 +143,38 @@ if ( ! defined( 'ABSPATH' ) ) {
 							<code style="font-size: 11px;"><?php echo esc_html( $payment->asaas_payment_id ); ?></code>
 						</td>
 						<td><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $payment->created_at ) ) ); ?></td>
+						<td>
+							<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+								<?php if ( 'pending' === $payment->status && ! empty( $payment->asaas_payment_id ) ) : ?>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;">
+										<?php wp_nonce_field( 'vetraiz_payment_action' ); ?>
+										<input type="hidden" name="action" value="vetraiz_payment_action">
+										<input type="hidden" name="action_type" value="confirm">
+										<input type="hidden" name="payment_id" value="<?php echo esc_attr( $payment->id ); ?>">
+										<?php if ( $subscription ) : ?>
+											<input type="hidden" name="subscription_id" value="<?php echo esc_attr( $subscription->id ); ?>">
+										<?php endif; ?>
+										<button type="submit" class="button button-small" onclick="return confirm('Tem certeza que deseja confirmar este pagamento?');" style="background: #00a32a; color: #fff; border-color: #00a32a;">
+											Confirmar
+										</button>
+									</form>
+								<?php endif; ?>
+								<?php if ( 'received' === $payment->status && ! empty( $payment->asaas_payment_id ) ) : ?>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;">
+										<?php wp_nonce_field( 'vetraiz_payment_action' ); ?>
+										<input type="hidden" name="action" value="vetraiz_payment_action">
+										<input type="hidden" name="action_type" value="refund">
+										<input type="hidden" name="payment_id" value="<?php echo esc_attr( $payment->id ); ?>">
+										<?php if ( $subscription ) : ?>
+											<input type="hidden" name="subscription_id" value="<?php echo esc_attr( $subscription->id ); ?>">
+										<?php endif; ?>
+										<button type="submit" class="button button-small" onclick="return confirm('Tem certeza que deseja reembolsar este pagamento?');" style="background: #d63638; color: #fff; border-color: #d63638;">
+											Reembolsar
+										</button>
+									</form>
+								<?php endif; ?>
+							</div>
+						</td>
 					</tr>
 				<?php endforeach; ?>
 			<?php endif; ?>

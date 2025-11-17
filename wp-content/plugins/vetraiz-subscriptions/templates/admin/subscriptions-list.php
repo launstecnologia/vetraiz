@@ -67,6 +67,17 @@ $payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
 <div class="wrap vetraiz-subscriptions-admin">
 	<h1>Todas as Assinaturas</h1>
 	
+	<?php
+	// Show success/error messages
+	if ( isset( $_GET['message'] ) ) {
+		if ( 'success' === $_GET['message'] ) {
+			echo '<div class="notice notice-success is-dismissible"><p>Ação executada com sucesso!</p></div>';
+		} elseif ( 'error' === $_GET['message'] && isset( $_GET['error_msg'] ) ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html( urldecode( $_GET['error_msg'] ) ) . '</p></div>';
+		}
+	}
+	?>
+	
 	<?php if ( ! empty( $subscriptions ) ) : ?>
 		<p class="description">Total de assinaturas: <strong><?php echo count( $subscriptions ); ?></strong></p>
 	<?php endif; ?>
@@ -147,9 +158,31 @@ $payments_table = $wpdb->prefix . 'vetraiz_subscription_payments';
 							<?php echo $subscription->next_payment_date ? esc_html( date_i18n( 'd/m/Y', strtotime( $subscription->next_payment_date ) ) ) : '-'; ?>
 						</td>
 						<td>
-							<a href="<?php echo esc_url( admin_url( 'admin.php?page=vetraiz-subscriptions-payments&subscription_id=' . $subscription->id ) ); ?>" class="button button-small">
-								Ver Pagamentos
-							</a>
+							<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+								<a href="<?php echo esc_url( admin_url( 'admin.php?page=vetraiz-subscriptions-payments&subscription_id=' . $subscription->id ) ); ?>" class="button button-small">
+									Ver Pagamentos
+								</a>
+								<?php if ( 'active' === $subscription->status || 'pending' === $subscription->status ) : ?>
+									<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;">
+										<?php wp_nonce_field( 'vetraiz_subscription_action' ); ?>
+										<input type="hidden" name="action" value="vetraiz_subscription_action">
+										<input type="hidden" name="action_type" value="cancel">
+										<input type="hidden" name="subscription_id" value="<?php echo esc_attr( $subscription->id ); ?>">
+										<button type="submit" class="button button-small" onclick="return confirm('Tem certeza que deseja cancelar esta assinatura?');" style="background: #d63638; color: #fff; border-color: #d63638;">
+											Cancelar
+										</button>
+									</form>
+								<?php endif; ?>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display: inline;">
+									<?php wp_nonce_field( 'vetraiz_subscription_action' ); ?>
+									<input type="hidden" name="action" value="vetraiz_subscription_action">
+									<input type="hidden" name="action_type" value="delete">
+									<input type="hidden" name="subscription_id" value="<?php echo esc_attr( $subscription->id ); ?>">
+									<button type="submit" class="button button-small" onclick="return confirm('Tem certeza que deseja EXCLUIR esta assinatura? Esta ação não pode ser desfeita!');" style="background: #8a2424; color: #fff; border-color: #8a2424;">
+										Excluir
+									</button>
+								</form>
+							</div>
 						</td>
 					</tr>
 					<?php if ( ! empty( $payments ) ) : ?>

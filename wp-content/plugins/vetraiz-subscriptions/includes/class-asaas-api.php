@@ -151,5 +151,57 @@ class Vetraiz_Subscriptions_Asaas_API {
 	public function create_credit_card_token( $data ) {
 		return $this->request( 'creditCard/tokenize', $data, 'POST' );
 	}
+	
+	/**
+	 * Cancel subscription
+	 *
+	 * @param string $subscription_id Subscription ID.
+	 * @return array|WP_Error
+	 */
+	public function cancel_subscription( $subscription_id ) {
+		return $this->request( "subscriptions/{$subscription_id}", array(), 'DELETE' );
+	}
+	
+	/**
+	 * Delete subscription
+	 *
+	 * @param string $subscription_id Subscription ID.
+	 * @return array|WP_Error
+	 */
+	public function delete_subscription( $subscription_id ) {
+		return $this->request( "subscriptions/{$subscription_id}", array(), 'DELETE' );
+	}
+	
+	/**
+	 * Refund payment
+	 *
+	 * @param string $payment_id Payment ID.
+	 * @return array|WP_Error
+	 */
+	public function refund_payment( $payment_id ) {
+		return $this->request( "payments/{$payment_id}/refund", array(), 'DELETE' );
+	}
+	
+	/**
+	 * Confirm payment
+	 *
+	 * @param string $payment_id Payment ID.
+	 * @return array|WP_Error
+	 */
+	public function confirm_payment( $payment_id ) {
+		// Update payment status to received
+		return $this->request( "payments/{$payment_id}", array( 'status' => 'RECEIVED' ), 'POST' );
+	}
+	
+	/**
+	 * Update subscription
+	 *
+	 * @param string $subscription_id Subscription ID.
+	 * @param array  $data Data to update.
+	 * @return array|WP_Error
+	 */
+	public function update_subscription( $subscription_id, $data ) {
+		return $this->request( "subscriptions/{$subscription_id}", $data, 'POST' );
+	}
 }
 
