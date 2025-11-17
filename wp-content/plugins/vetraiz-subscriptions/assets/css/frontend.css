@@ -46,17 +46,17 @@
 }
 
 .vetraiz-form-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 0;
-	min-height: 100%;
+	display: flex;
+	flex-wrap: wrap;
 	width: 100%;
+	margin: 0;
 }
 
 .vetraiz-form-column {
 	padding: 30px;
 	min-height: 100%;
 	box-sizing: border-box;
+	width: 100%;
 }
 
 .vetraiz-form-left {
@@ -66,6 +66,15 @@
 
 .vetraiz-form-right {
 	background: #fff;
+}
+
+/* Desktop - duas colunas (col-md-6) */
+@media (min-width: 768px) {
+	.vetraiz-form-column {
+		width: 50%;
+		flex: 0 0 50%;
+		max-width: 50%;
+	}
 }
 
 .form-section {
@@ -398,10 +407,12 @@
 	margin: 20px 0;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-	.vetraiz-form-grid {
-		grid-template-columns: 1fr;
+/* Mobile - uma coluna */
+@media (max-width: 767px) {
+	.vetraiz-form-column {
+		width: 100%;
+		flex: 0 0 100%;
+		max-width: 100%;
 	}
 	
 	.vetraiz-form-left {
