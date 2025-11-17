@@ -148,6 +148,11 @@ function vetraiz_handle_create_subscription() {
 	$plan_name = get_option( 'vetraiz_plan_name', 'Assinatura Mensal' );
 	$plan_value = get_option( 'vetraiz_plan_value', '14.99' );
 	
+	// Log subscription creation attempt
+	if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+		error_log( 'VETRAIZ AJAX: Creating subscription for user ID: ' . $user_id . ' - Payment method: ' . $payment_method );
+	}
+	
 	$subscription_id = Vetraiz_Subscriptions_Subscription::create( $user_id, array(
 		'plan_name'     => $plan_name,
 		'value'          => $plan_value,
@@ -156,7 +161,16 @@ function vetraiz_handle_create_subscription() {
 	) );
 	
 	if ( is_wp_error( $subscription_id ) ) {
-		wp_send_json_error( array( 'message' => $subscription_id->get_error_message() ) );
+		$error_message = $subscription_id->get_error_message();
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ AJAX: Subscription creation failed - ' . $error_message );
+		}
+		wp_send_json_error( array( 'message' => $error_message ) );
+	}
+	
+	// Log success
+	if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+		error_log( 'VETRAIZ AJAX: Subscription created successfully - ID: ' . $subscription_id );
 	}
 	
 	// Get first payment

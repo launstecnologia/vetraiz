@@ -117,14 +117,21 @@ class Vetraiz_Subscriptions_Subscription {
 		
 		if ( is_wp_error( $subscription_response ) || 200 !== $subscription_response['code'] ) {
 			$error_message = isset( $subscription_response['body']['errors'] ) ? json_encode( $subscription_response['body']['errors'] ) : 'Erro ao criar assinatura no Asaas';
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: Failed to create subscription in Asaas - Code: ' . ( is_wp_error( $subscription_response ) ? 'WP_Error' : $subscription_response['code'] ) . ' - Error: ' . $error_message );
+			}
 			return new WP_Error( 'subscription_creation_failed', $error_message );
 		}
 		
 		$asaas_subscription = $subscription_response['body'];
 		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ SUBSCRIPTION: Subscription created in Asaas - ID: ' . $asaas_subscription['id'] );
+		}
+		
 		// Save subscription in database
 		$table = $wpdb->prefix . 'vetraiz_subscriptions';
-		$wpdb->insert(
+		$insert_result = $wpdb->insert(
 			$table,
 			array(
 				'user_id'              => $user_id,
@@ -140,13 +147,45 @@ class Vetraiz_Subscriptions_Subscription {
 			array( '%d', '%s', '%s', '%s', '%f', '%s', '%s', '%s', '%s' )
 		);
 		
+		if ( false === $insert_result ) {
+			$error_message = 'Erro ao salvar assinatura no banco de dados: ' . $wpdb->last_error;
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: Database insert failed - ' . $error_message );
+			}
+			return new WP_Error( 'subscription_save_failed', $error_message );
+		}
+		
 		$subscription_id = $wpdb->insert_id;
+		
+		if ( ! $subscription_id || $subscription_id === 0 ) {
+			$error_message = 'Erro ao obter ID da assinatura inserida. Last error: ' . $wpdb->last_error;
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: Insert ID is 0 - ' . $error_message );
+			}
+			return new WP_Error( 'subscription_id_failed', $error_message );
+		}
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ SUBSCRIPTION: Subscription saved to database - Local ID: ' . $subscription_id . ' - Asaas ID: ' . $asaas_subscription['id'] );
+		}
 		
 		// Get first payment and save it
 		$payments_response = $api->get_subscription_payments( $asaas_subscription['id'] );
 		if ( ! is_wp_error( $payments_response ) && 200 === $payments_response['code'] && ! empty( $payments_response['body']['data'] ) ) {
 			$first_payment = $payments_response['body']['data'][0];
-			Vetraiz_Subscriptions_Payment::create_from_asaas( $subscription_id, $user_id, $first_payment );
+			$payment_created = Vetraiz_Subscriptions_Payment::create_from_asaas( $subscription_id, $user_id, $first_payment );
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( 'VETRAIZ SUBSCRIPTION: First payment created - Payment ID: ' . ( $payment_created ? $payment_created : 'failed' ) );
+			}
+		} else {
+			if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				$error_msg = is_wp_error( $payments_response ) ? $payments_response->get_error_message() : 'Code: ' . ( isset( $payments_response['code'] ) ? $payments_response['code'] : 'unknown' );
+				error_log( 'VETRAIZ SUBSCRIPTION: Failed to get payments from Asaas - ' . $error_msg );
+			}
+		}
+		
+		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( 'VETRAIZ SUBSCRIPTION: Subscription creation completed - Returning ID: ' . $subscription_id );
 		}
 		
 		return $subscription_id;
