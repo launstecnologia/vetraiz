@@ -319,7 +319,7 @@ class Vetraiz_Subscriptions_Access_Control {
 			// Check if user had access via WooCommerce but it expired
 			$had_woocommerce_access = $this->check_expired_woocommerce_access( $user_id );
 			
-			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
+			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/conteudo-restrito' );
 			
 			// Store redirect URL for after login/subscription
 			if ( ! is_user_logged_in() ) {
@@ -381,7 +381,7 @@ class Vetraiz_Subscriptions_Access_Control {
 		
 		// Check if user has access
 		if ( ! $this->check_user_access() ) {
-			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/assinar' );
+			$subscribe_url = get_option( 'vetraiz_subscribe_page_id' ) ? get_permalink( get_option( 'vetraiz_subscribe_page_id' ) ) : home_url( '/conteudo-restrito' );
 			
 			// Store redirect URL
 			if ( ! is_user_logged_in() ) {

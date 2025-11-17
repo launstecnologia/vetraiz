@@ -163,17 +163,13 @@ $expired = isset( $_GET['expired'] ) && '1' === $_GET['expired'];
 					</div>
 					
 					<div class="form-section">
-						<h3>Forma de Pagamento</h3>
+						<h3>Forma de Pagamento *</h3>
 						<div class="payment-methods">
 							<label class="payment-method-option" for="payment_pix">
-								<input type="radio" id="payment_pix" name="payment_method" value="PIX" checked>
+								<input type="radio" id="payment_pix" name="payment_method" value="PIX" required>
 								<div class="payment-method-content">
 									<div class="payment-icon">
-										<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-											<rect width="40" height="40" rx="8" fill="#32BCAD"/>
-											<path d="M20 10C14.48 10 10 14.48 10 20C10 25.52 14.48 30 20 30C25.52 30 30 25.52 30 20C30 14.48 25.52 10 20 10ZM20 28C15.59 28 12 24.41 12 20C12 15.59 15.59 12 20 12C24.41 12 28 15.59 28 20C28 24.41 24.41 28 20 28Z" fill="white"/>
-											<path d="M20 14C17.79 14 16 15.79 16 18C16 20.21 17.79 22 20 22C22.21 22 24 20.21 24 18C24 15.79 22.21 14 20 14Z" fill="white"/>
-										</svg>
+										<img src="https://geradornv.com.br/wp-content/themes/v1.38.0/assets/images/logos/pix/logo-pix-520x520.png" alt="PIX" style="width: 40px; height: 40px; object-fit: contain;">
 									</div>
 									<div class="payment-method-info">
 										<span class="payment-method-name">PIX</span>
@@ -183,7 +179,7 @@ $expired = isset( $_GET['expired'] ) && '1' === $_GET['expired'];
 							</label>
 							
 							<label class="payment-method-option" for="payment_card">
-								<input type="radio" id="payment_card" name="payment_method" value="CREDIT_CARD">
+								<input type="radio" id="payment_card" name="payment_method" value="CREDIT_CARD" required>
 								<div class="payment-method-content">
 									<div class="payment-icon">
 										<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -202,7 +198,7 @@ $expired = isset( $_GET['expired'] ) && '1' === $_GET['expired'];
 							</label>
 						</div>
 						
-						<div id="vetraiz-card-fields" class="card-fields-section">
+						<div id="vetraiz-card-fields" class="card-fields-section" style="display: none;">
 							<h4>Dados do Cartão</h4>
 							<div class="form-group">
 								<label for="card_holder_name">Nome no Cartão *</label>
@@ -286,6 +282,37 @@ jQuery(document).ready(function($) {
 		} else {
 			$('#vetraiz-card-fields').slideUp();
 			$('#vetraiz-card-fields input').prop('required', false);
+			$('#vetraiz-card-fields input').val(''); // Clear card fields when switching to PIX
+		}
+	});
+	
+	// Validate payment method selection before submit
+	$('#vetraiz-subscribe-form').on('submit', function(e) {
+		var paymentMethod = $('input[name="payment_method"]:checked').val();
+		if (!paymentMethod) {
+			e.preventDefault();
+			alert('Por favor, selecione uma forma de pagamento.');
+			return false;
+		}
+		if (paymentMethod === 'CREDIT_CARD') {
+			// Validate card fields
+			var cardHolder = $('#card_holder_name').val();
+			var cardNumber = $('#card_number').val().replace(/\s/g, '');
+			var cardExpiry = $('#card_expiry').val();
+			var cardCvv = $('#card_cvv').val();
+			
+			if (!cardHolder || !cardNumber || !cardExpiry || !cardCvv) {
+				e.preventDefault();
+				alert('Por favor, preencha todos os dados do cartão.');
+				return false;
+			}
+			
+			// Validate card number (basic check - should be 13-19 digits)
+			if (cardNumber.length < 13 || cardNumber.length > 19) {
+				e.preventDefault();
+				alert('Número do cartão inválido.');
+				return false;
+			}
 		}
 	});
 	
