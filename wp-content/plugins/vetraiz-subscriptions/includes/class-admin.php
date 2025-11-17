@@ -517,6 +517,44 @@ class Vetraiz_Subscriptions_Admin {
 	}
 	
 	/**
+	 * Redirect admin to dashboard
+	 */
+	public function redirect_admin_to_dashboard() {
+		// Only redirect if accessing wp-admin/index.php directly
+		global $pagenow;
+		
+		// Check if user is admin and accessing dashboard
+		if ( 'index.php' === $pagenow && ! isset( $_GET['page'] ) ) {
+			// Don't redirect if already on a specific page
+			if ( ! isset( $_GET['page'] ) && current_user_can( 'manage_options' ) ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=vetraiz-subscriptions-dashboard' ) );
+				exit;
+			}
+		}
+	}
+	
+	/**
+	 * Remove update notices
+	 */
+	public function remove_update_notices() {
+		// Remove WordPress update notices
+		remove_action( 'admin_notices', 'update_nag', 3 );
+		
+		// Remove plugin update notices
+		remove_action( 'admin_notices', 'maintenance_nag', 10 );
+		
+		// Hide update count from admin menu
+		add_filter( 'pre_site_transient_update_core', '__return_null' );
+		add_filter( 'pre_site_transient_update_plugins', '__return_null' );
+		add_filter( 'pre_site_transient_update_themes', '__return_null' );
+		
+		// Remove update nag for non-admins
+		if ( ! current_user_can( 'update_core' ) ) {
+			remove_action( 'admin_notices', 'update_nag', 3 );
+		}
+	}
+	
+	/**
 	 * Reorganize admin menu
 	 */
 	public function reorganize_admin_menu() {
