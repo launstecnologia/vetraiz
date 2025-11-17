@@ -102,26 +102,26 @@ class Vetraiz_Subscriptions_Frontend {
 		// Check if there's a redirect parameter
 		$redirect_to = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
 		
-		if ( ! is_user_logged_in() ) {
-			$login_url = $redirect_to ? add_query_arg( 'redirect_to', urlencode( $redirect_to ), wp_login_url() ) : wp_login_url();
-			return '<p>Você precisa estar logado para assinar. <a href="' . esc_url( $login_url ) . '">Fazer login</a></p>';
-		}
-		
-		$user_id = get_current_user_id();
-		
-		// Check if user already has subscription
-		$subscription = Vetraiz_Subscriptions_Subscription::get_user_subscription( $user_id );
-		if ( $subscription && in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
-			$message = '<div class="vetraiz-alert vetraiz-alert-info">Você já possui uma assinatura ativa. <a href="' . home_url( '/minha-assinatura' ) . '">Ver minha assinatura</a></div>';
+		// If user is logged in, check if already has subscription
+		if ( is_user_logged_in() ) {
+			$user_id = get_current_user_id();
 			
-			// If there's a redirect, redirect after showing message
-			if ( $redirect_to ) {
-				$message .= '<script>setTimeout(function(){ window.location.href = "' . esc_js( $redirect_to ) . '"; }, 2000);</script>';
+			// Check if user already has subscription
+			$subscription = Vetraiz_Subscriptions_Subscription::get_user_subscription( $user_id );
+			if ( $subscription && in_array( $subscription->status, array( 'active', 'pending' ), true ) ) {
+				$message = '<div class="vetraiz-alert vetraiz-alert-info">Você já possui uma assinatura ativa. <a href="' . home_url( '/minha-assinatura' ) . '">Ver minha assinatura</a></div>';
+				
+				// If there's a redirect, redirect after showing message
+				if ( $redirect_to ) {
+					$message .= '<script>setTimeout(function(){ window.location.href = "' . esc_js( $redirect_to ) . '"; }, 2000);</script>';
+				}
+				
+				return $message;
 			}
-			
-			return $message;
 		}
 		
+		// Show form for both logged in and not logged in users
+		// The form itself handles showing login/cadastro fields
 		ob_start();
 		include VETRAIZ_SUBSCRIPTIONS_PLUGIN_DIR . 'templates/subscribe-form.php';
 		return ob_get_clean();
