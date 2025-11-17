@@ -46,17 +46,19 @@
 }
 
 .vetraiz-form-grid {
-	display: flex;
-	flex-wrap: wrap;
-	width: 100%;
-	margin: 0;
+	display: flex !important;
+	flex-wrap: wrap !important;
+	width: 100% !important;
+	margin: 0 !important;
 }
 
 .vetraiz-form-column {
 	padding: 30px;
 	min-height: 100%;
 	box-sizing: border-box;
-	width: 100%;
+	width: 100% !important;
+	flex: 0 0 100% !important;
+	max-width: 100% !important;
 }
 
 .vetraiz-form-left {
@@ -71,9 +73,14 @@
 /* Desktop - duas colunas (col-md-6) */
 @media (min-width: 768px) {
 	.vetraiz-form-column {
-		width: 50%;
-		flex: 0 0 50%;
-		max-width: 50%;
+		width: 50% !important;
+		flex: 0 0 50% !important;
+		max-width: 50% !important;
+	}
+	
+	.vetraiz-form-grid {
+		display: flex !important;
+		flex-direction: row !important;
 	}
 }
 
