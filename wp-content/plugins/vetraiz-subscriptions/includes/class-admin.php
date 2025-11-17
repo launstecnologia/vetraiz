@@ -84,6 +84,7 @@ class Vetraiz_Subscriptions_Admin {
 		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_video_post_type' );
 		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_video_category' );
 		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_video_url_patterns' );
+		register_setting( 'vetraiz_subscriptions_settings', 'vetraiz_protect_all_videos' );
 		
 		// Sanitize URL patterns
 		add_filter( 'sanitize_option_vetraiz_video_url_patterns', array( $this, 'sanitize_url_patterns' ) );

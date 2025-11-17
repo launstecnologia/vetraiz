@@ -172,27 +172,107 @@ class Vetraiz_Subscriptions_Access_Control {
 	 * @return bool
 	 */
 	private function is_video_page() {
-		// Check by post type
+		// First check if this is a video post type
 		$video_post_type = get_option( 'vetraiz_video_post_type', 'video' );
+		$is_video_post_type = false;
+		
 		if ( $video_post_type && is_singular( $video_post_type ) ) {
-			return true;
+			$is_video_post_type = true;
 		}
 		
-		// Check by category/taxonomy
-		$video_category = get_option( 'vetraiz_video_category', '' );
-		if ( $video_category && has_term( $video_category, 'category' ) ) {
-			return true;
-		}
-		
-		// Check by meta field (JetEngine)
-		if ( function_exists( 'jet_engine' ) && is_singular() ) {
-			$is_video = get_post_meta( get_the_ID(), '_vetraiz_is_video', true );
-			if ( $is_video ) {
+		// If it's a video post type, check if it requires subscription
+		if ( $is_video_post_type ) {
+			$post_id = get_the_ID();
+			
+			// Check if we should protect all videos or only marked ones
+			$protect_all = get_option( 'vetraiz_protect_all_videos', false );
+			
+			if ( $protect_all ) {
+				// Protect all videos of this post type
 				return true;
 			}
+			
+			// Check by meta field (JetEngine) - check for "Assinantes" or similar
+			$requires_subscription = false;
+			
+			// Check common meta field names for subscription requirement
+			$meta_fields_to_check = array(
+				'_jet_engine_listing_type', // JetEngine listing type
+				'video_access_type',
+				'access_type',
+				'requires_subscription',
+				'_vetraiz_requires_subscription',
+			);
+			
+			foreach ( $meta_fields_to_check as $meta_field ) {
+				$value = get_post_meta( $post_id, $meta_field, true );
+				if ( $value ) {
+					// Check if value indicates subscription required
+					if ( in_array( strtolower( $value ), array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+						$requires_subscription = true;
+						break;
+					}
+				}
+			}
+			
+			// Check JetEngine meta fields (they might be stored differently)
+			if ( function_exists( 'jet_engine' ) ) {
+				// Try to get all meta fields
+				$all_meta = get_post_meta( $post_id );
+				foreach ( $all_meta as $key => $values ) {
+					if ( is_array( $values ) && ! empty( $values[0] ) ) {
+						$value = strtolower( $values[0] );
+						if ( in_array( $value, array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+							$requires_subscription = true;
+							break;
+						}
+					}
+				}
+			}
+			
+			// Check by taxonomy "tipos-de-videos" for term "assinantes" (most common case)
+			$taxonomies_to_check = array(
+				'tipos-de-videos', // JetEngine taxonomy
+				'tipos_de_videos',
+				'tipo-de-video',
+				'video-type',
+			);
+			
+			foreach ( $taxonomies_to_check as $taxonomy ) {
+				if ( taxonomy_exists( $taxonomy ) ) {
+					$terms = wp_get_post_terms( $post_id, $taxonomy, array( 'fields' => 'slugs' ) );
+					if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+						foreach ( $terms as $term ) {
+							if ( in_array( strtolower( $term ), array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+								$requires_subscription = true;
+								break 2; // Break both loops
+							}
+						}
+					}
+				}
+			}
+			
+			// Check by category/taxonomy
+			$video_category = get_option( 'vetraiz_video_category', '' );
+			if ( $video_category && has_term( $video_category, 'category' ) ) {
+				$requires_subscription = true;
+			}
+			
+			// Check by custom meta field
+			$is_video_meta = get_post_meta( $post_id, '_vetraiz_is_video', true );
+			if ( $is_video_meta ) {
+				$requires_subscription = true;
+			}
+			
+			// If video post type but no subscription requirement found, don't protect
+			if ( ! $requires_subscription ) {
+				return false;
+			}
+			
+			return true;
 		}
 		
-		// Check by URL pattern
+		// Check by URL pattern (only if not a video post type)
 		$url_patterns = get_option( 'vetraiz_video_url_patterns', array() );
 		if ( ! is_array( $url_patterns ) && ! empty( $url_patterns ) ) {
 			$url_patterns = explode( "\n", $url_patterns );
@@ -204,6 +284,29 @@ class Vetraiz_Subscriptions_Access_Control {
 			$current_url = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
 			foreach ( $url_patterns as $pattern ) {
 				if ( ! empty( $pattern ) && false !== strpos( $current_url, $pattern ) ) {
+					// If URL matches pattern, check if it's a video post type that requires subscription
+					if ( is_singular() ) {
+						$post_id = get_the_ID();
+						// Check if this specific post requires subscription
+						$requires_subscription = get_post_meta( $post_id, '_vetraiz_requires_subscription', true );
+						if ( ! $requires_subscription ) {
+							// Check JetEngine fields
+							$all_meta = get_post_meta( $post_id );
+							$found_subscription = false;
+							foreach ( $all_meta as $key => $values ) {
+								if ( is_array( $values ) && ! empty( $values[0] ) ) {
+									$value = strtolower( $values[0] );
+									if ( in_array( $value, array( 'assinantes', 'subscriber', 'subscribers', 'premium', 'paid' ), true ) ) {
+										$found_subscription = true;
+										break;
+									}
+								}
+							}
+							if ( ! $found_subscription ) {
+								return false; // URL matches but post doesn't require subscription
+							}
+						}
+					}
 					return true;
 				}
 			}

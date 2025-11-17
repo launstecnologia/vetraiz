@@ -104,7 +104,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</th>
 				<td>
 					<textarea id="vetraiz_video_url_patterns" name="vetraiz_video_url_patterns" rows="5" class="large-text"><?php echo esc_textarea( implode( "\n", get_option( 'vetraiz_video_url_patterns', array() ) ) ); ?></textarea>
-					<p class="description">URLs que contêm estes padrões serão protegidas (ex: /video/, /conteudo-restrito/)</p>
+					<p class="description">URLs que contêm estes padrões serão protegidas (ex: /video/, /conteudo-restrito/). <strong>Importante:</strong> Apenas vídeos marcados como "Assinantes" no JetEngine serão protegidos.</p>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="vetraiz_protect_all_videos">Proteger todos os vídeos do post type</label>
+				</th>
+				<td>
+					<input type="checkbox" id="vetraiz_protect_all_videos" name="vetraiz_protect_all_videos" value="1" <?php checked( get_option( 'vetraiz_protect_all_videos', false ) ); ?> />
+					<p class="description">Se marcado, todos os vídeos do post type serão protegidos. Se desmarcado, apenas vídeos marcados como "Assinantes" serão protegidos.</p>
 				</td>
 			</tr>
 		</table>
